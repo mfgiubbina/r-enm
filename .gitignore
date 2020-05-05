@@ -1,0 +1,15 @@
+# Files #
+###################
+*.Rhistory
+*.csv
+*.xlsx
+*.png
+*.zip
+*.dbf
+*.prj
+*.shp
+*.shx
+*.tif
+*.bil
+*.hdr
+*.xml

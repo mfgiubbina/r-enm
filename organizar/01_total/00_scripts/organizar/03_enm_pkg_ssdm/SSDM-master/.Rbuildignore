@@ -1,0 +1,11 @@
+^CRAN-RELEASE$
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.cran-comment
+^\.travis\.yml$
+NEWS.Rmd
+README.Rmd
+examples
+cran-comments.md
+^appveyor\.yml$
+ToDo.md

@@ -10,11 +10,10 @@ rm(list = ls())
 
 # packages
 library(raster)
-library(rgdal)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/00_github_organizar/r-sdm/00_pragmatico/00_present"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present"
 setwd(path)
 dir()
 
@@ -95,7 +94,8 @@ for(i in occ$species %>% unique){
   #   theme(axis.title = element_text(size = 15),
   #         axis.text = element_text(size = 12))
   # ggsave(paste0("00_uncertainties_and_thresholds_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
-  # 
+  
   }
+
 # end ---------------------------------------------------------------------
   

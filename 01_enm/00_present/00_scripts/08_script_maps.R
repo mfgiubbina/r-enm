@@ -1,7 +1,7 @@
 #' ---
 #' title: maps
 #' authors: mauricio vancine
-#' date: 2020-04-29
+#' date: 2020-05-05
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -11,18 +11,18 @@ rm(list = ls())
 # packages
 library(ggspatial)
 library(raster)
-library(rgdal)
 library(rnaturalearth)
 library(tidyverse)
+library(RColorBrewer)
 
 # directory
-path <- "/home/mude/data/github/00_github_organizar/r-sdm/00_pragmatico/00_present"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present"
 setwd(path)
 dir()
 
 # import data -------------------------------------------------------------
 # occ
-occ <- readr::read_csv("02_occurrences/03_clean/00_occ_clean_taxa_date_bias_limit_spatial_2020-04-29.csv")
+occ <- readr::read_csv("02_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
 # limits
@@ -54,7 +54,8 @@ for(i in occ$species %>% unique){
     geom_sf(data = sa, fill = "gray90") +
     geom_sf(data = li, fill = "gray75") +
     geom_point(data = occ %>% dplyr::filter(species == i), 
-               aes(longitude, latitude, color = species %>% str_to_title() %>% sub("_", " ", .)), 
+               aes(longitude, latitude, 
+                   color = species %>% str_to_title() %>% sub("_", " ", .)), 
                size = 2, alpha = .7) +
     scale_color_manual(values = "black", guide = guide_legend(order = 1)) +
     coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
@@ -83,8 +84,7 @@ for(i in occ$species %>% unique){
   
   # import
   ens <- dir(pattern = i) %>%
-    stringr::str_subset("ensemble") %>% 
-    stringr::str_subset(".tif$") %>% 
+    stringr::str_subset(paste0("ensemble_", i, ".tif")) %>% 
     raster::raster()
   
   # directory
@@ -130,7 +130,7 @@ for(i in occ$species %>% unique){
   
   # import
   ens <- dir(pattern = i) %>% 
-    stringr::str_subset("ensemble") %>% 
+    stringr::str_subset(paste0("ensemble_", i, "_")) %>% 
     stringr::str_subset(".tif$") %>% 
     raster::stack()
   
@@ -204,7 +204,7 @@ for(i in occ$species %>% unique){
       geom_raster(data = da, aes(x, y, fill = unc * 100)) +
       geom_sf(data = li, fill = NA, color = "gray30") +
       scale_color_manual(values = "black", guide = guide_legend(order = 1)) +
-      scale_fill_gradientn(colours = RColorBrewer::brewer.pal(name = "YlOrBr", n = 9)) +
+      scale_fill_gradientn(colours = rev(RColorBrewer::brewer.pal(name = "Spectral", n = 9))) +
       coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
       labs(x = "Longitude", y = "Latitude", fill = "Uncertainties (%)", color = "Occurrences") +
       annotation_scale(location = "br", width_hint = .3) +

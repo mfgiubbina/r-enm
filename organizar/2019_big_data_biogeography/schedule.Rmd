@@ -1,0 +1,60 @@
+---
+output: html_document
+---
+
+## Day 1 "Big data in Biogeography"
+
+-	Welcome & Introduction 
+
+- Presentation of participants (3 - 5 minutes each, three slides)
+
+-	Introductory lecture: Recent developments in big data biogeography
+
+- Literature group work and discussion 
+
+- Lecture & Hands on "Biodiversity databases"
+
+- Design of the course projects
+
+- Help with software setup if necessary
+
+
+## Day 2 "Biogeography through space - Recent biodiversity patterns"
+
+- Lecture “Common biases, caveats and errors in biodiversity databases and tools to address them”
+
+- Hands-on "Recent biodiversity patterns" in R (Obtaining occurrence records, data cleaning, exploring sampling bias)
+
+- Lecture “Novel tools for big data biogeography: bioregionalization, species to area classification, automated conservation assessment” 
+
+- Hands-on: "Recent biogeography" (Species richness, taxon-specific bioregionalization, extracting environmental data)
+
+## Day 3 "Historical biogeography - reconstructing ancestral ranges"
+
+- Hands-on "Data preparation"
+
+- Lecture "Historical biogeography – methods to model the evolution of geographic ranges through time"
+
+- Hands-on "Reconstructing ancestral ranges" (`DEC`, `BioGeoBEARS`, `Biogeographic stochastic mapping`, `GeoSSE`)
+
+## Day 4 "Fossil Biogeography"
+
+- Lecture "Trait evolution"
+
+- Hands on "Reconstructing ancestral ranges as continuous trait" (`BITE`)
+
+- Guest lecture by [Sara Varela](https://scholar.google.de/citations?hl=de&user=8dckI70AAAAJ) on Species distribution in paleobiogeography
+
+- Hands on "Reconstructing ancestral ranges as continuous trait" (`BITE`)
+
+
+## Day 5 "Putting it all together"
+- Lecture "Fossil biogeography"
+
+- Optional: Hands-on "Visualizing biogeographic results in R"
+
+- Time for project work
+
+- Student presentations
+
+- Course evaluation and wrap up

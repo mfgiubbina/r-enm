@@ -13,7 +13,7 @@ library(tidyverse)
 library(wesanderson)
 
 # directory
-path <- "/home/mude/data/github/00_github_organizar/r-sdm/00_pragmatico/00_present/04_evaluation"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/04_evaluation"
 setwd(path)
 dir()
 

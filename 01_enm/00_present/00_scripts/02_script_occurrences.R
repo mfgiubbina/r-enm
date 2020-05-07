@@ -1,7 +1,7 @@
 #' ---
 #' title: occ - download and clean
 #' author: mauricio vancine
-#' date: 2019-04-13
+#' date: 2019-05-05
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -18,7 +18,7 @@ library(sf)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/00_github_organizar/r-sdm/00_pragmatico/00_present/02_occurrences"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/02_occurrences"
 setwd(path)
 dir()
 
@@ -119,12 +119,15 @@ for(i in sp_list){
   
   # export
   readr::write_csv(occ_data, 
-                   paste0("00_occ_", i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_"), "_", 
+                   paste0("occ_", i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_"), "_", 
                           lubridate::today(), ".csv"))
   
 }
 
 # specieslink -------------------------------------------------------------
+# directory
+setwd(path); setwd("01_raw")
+
 # unzip
 purrr::map(dir(patt = ".zip"), unzip)
 
@@ -150,22 +153,25 @@ for(i in dir(patt = ".xlsx$")){
   
   # export
   readr::write_csv(occ_specieslink_data, 
-                   paste0("01_occ_specieslink_", 
+                   paste0("occ_specieslink_", 
                           occ_specieslink_data$species_search[1] %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_"), 
                           "_", lubridate::today(), ".csv"))
   
 }
 
 # integrated --------------------------------------------------------------
+# directory
+setwd(path); setwd("01_raw")
+
 # import
 occ_data <- purrr::map_dfr(dir(pattern = ".csv"), readr::read_csv)
 occ_data
 
 # directory
-setwd(path); dir.create("02_integrated"); setwd("02_integrated")
+setwd(path); dir.create("02_integrated")
 
 # export
-readr::write_csv(occ_data, paste0("00_occ_integrated_", lubridate::today(), ".csv"))
+readr::write_csv(occ_data, paste0("02_integrated/occ_integrated_", lubridate::today(), ".csv"))
 
 # map
 occ_data_vector <- occ_data %>% 
@@ -181,6 +187,9 @@ tm_shape(li, bbox = sf::st_bbox(occ_data_vector)) +
   tm_layout(legend.text.fontface = "italic")
 
 # filter ------------------------------------------------------------------
+# directory
+setwd(path); dir.create("03_clean"); setwd("03_clean")
+
 # taxa filter
 # adjust names
 gnr_taxa <- NULL
@@ -216,8 +225,7 @@ gnr_taxa
 gnr_total
 
 # export gnr total
-setwd(path); dir.create("04_gnr_total")
-readr::write_csv(gnr_total, paste0("04_gnr_total/00_gnr_total_", lubridate::today(), ".csv"))
+readr::write_csv(gnr_total, paste0("gnr_total_", lubridate::today(), ".csv"))
 
 # confer data
 occ_data %>%
@@ -320,7 +328,7 @@ flags_bias <- CoordinateCleaner::clean_coordinates(
 #' TRUE = clean coordinate entry 
 #' FALSE = potentially problematic coordinate entries
 flags_bias %>% head
-summary(flags_bias)
+flags_bias %>% summary
 
 # exclude records flagged by any test
 occ_data_taxa_date_bias <- occ_data_na %>% 
@@ -331,7 +339,6 @@ occ_data_taxa_date_bias
 occ_data_na %>% dplyr::count(species)
 occ_data_taxa_date_bias %>% dplyr::count(species)
 
-# map
 # map
 occ_data_taxa_date_bias_vector <- occ_data_taxa_date_bias %>% 
   tidyr::drop_na(longitude, latitude) %>% 
@@ -353,19 +360,19 @@ occ_data_taxa_date_bias_vector <- occ_data_taxa_date_bias %>%
 occ_data_taxa_date_bias_vector
 
 # extent
-li_br <- rnaturalearth::ne_countries(scale = 110, country = "Brazil", returnclass = "sf") %>% 
+li_ex <- rnaturalearth::ne_countries(scale = 110, country = "Brazil", returnclass = "sf") %>% 
   sf::st_bbox() %>% 
   sf::st_as_sfc()
-li_br %>% tm_shape() + tm_polygons() + tm_graticules(lines = FALSE)
+li_ex %>% tm_shape() + tm_polygons() + tm_graticules(lines = FALSE)
 
 # crop to limit
-occ_data_taxa_date_bias_limit <- sf::st_crop(occ_data_taxa_date_bias_vector, br_li)
+occ_data_taxa_date_bias_limit <- sf::st_crop(occ_data_taxa_date_bias_vector, li_ex)
 occ_data_taxa_date_bias_limit
 
 # map
-tm_shape(li, bbox = sf::st_bbox(br_li)) +
+tm_shape(li, bbox = sf::st_bbox(li_ex)) +
   tm_polygons() +
-  tm_shape(li_br) +
+  tm_shape(li_ex) +
   tm_borders(col = "black") +
   tm_shape(occ_data_taxa_date_bias_limit) +
   tm_dots(size = .2, shape = 21, col = "species_search",  
@@ -382,7 +389,7 @@ occ_data_taxa_date_bias_limit
 # desaggregation
 occ_data_taxa_date_bias_limit_spatial <- ecospat::ecospat.occ.desaggregation(
   xy = occ_data_taxa_date_bias_limit,
-  min.dist = 0.1666667, 
+  min.dist = .5, 
   by = "species") %>%
   tibble::as_tibble() %>% 
   dplyr::add_count(species) %>%  
@@ -399,9 +406,9 @@ occ_data_taxa_date_bias_limit_spatial_vector <- occ_data_taxa_date_bias_limit_sp
   sf::st_as_sf(coords = c("lon", "lat"), crs = 4326)
 occ_data_taxa_date_bias_limit_spatial_vector
 
-tm_shape(li, bbox = sf::st_bbox(br_li)) +
+tm_shape(li, bbox = sf::st_bbox(li_ex)) +
   tm_polygons() +
-  tm_shape(li_br) +
+  tm_shape(li_ex) +
   tm_borders(col = "black") +
   tm_shape(occ_data_taxa_date_bias_limit_spatial_vector) +
   tm_dots(size = .2, shape = 21, col = "species_search",  
@@ -417,12 +424,9 @@ occ_data_taxa_date_bias_limit %>% dplyr::count(species)
 occ_data_taxa_date_bias_limit_spatial %>% dplyr::count(species)
 
 # export ------------------------------------------------------------------
-# directory
-setwd(path); dir.create("03_clean"); setwd("03_clean")
-
 # export
 readr::write_csv(occ_data_taxa_date_bias_limit_spatial, 
-                 paste0("00_occ_clean_taxa_date_bias_limit_spatial_", lubridate::today(), ".csv"))
+                 paste0("occ_clean_taxa_date_bias_limit_spatial.csv"))
 
 # -------------------------------------------------------------------------
 
@@ -431,87 +435,87 @@ readr::write_csv(occ_data_taxa_date_bias_limit_spatial,
 #' -------
 
 # oppc --------------------------------------------------------------------
-# import raster id
-var_id <- raster::raster("/home/mude/data/gitlab/r-sdm/00_pragmatico/00_present/01_variables/03_var/bio02.tif")
-var_id
-
-var_id[!is.na(var_id)] <- raster::cellFromXY(var_id, raster::rasterToPoints(var_id)[, 1:2])
-plot(var_id)
-
-# oppc
-occ_data_tax_date_spa_oppc <- occ_data_tax_date_spa %>% 
-  dplyr::mutate(oppc = raster::extract(var_id, dplyr::select(., longitude, latitude))) %>% 
-  dplyr::distinct(species, oppc, .keep_all = TRUE) %>% 
-  dplyr::filter(!is.na(oppc)) %>% 
-  dplyr::add_count(species) %>% 
-  dplyr::arrange(species)
-occ_data_tax_date_spa_oppc
-
-# verify
-table(occ_data_tax_date_spa$species)
-table(occ_data_tax_date_spa_oppc$species)
-
-# map
-ggplot() +
-  geom_sf(data = li %>% sf::st_crop(c(xmin = min(occ_data$longitude), ymin = min(occ_data$latitude), 
-                                      xmax = max(occ_data$longitude), ymax = max(occ_data$latitude))),
-          fill = "gray", alpha = .5) +
-  geom_point(data = occ_data_tax_date_spa_oppc, aes(x = longitude, y = latitude, color = species)) +
-  theme_bw()
-
-# sample bias -------------------------------------------------------------
-# haddadus binotatus
-# sampbias
-sampbias_hb <- occ_data_tax_date_spa %>%
-  dplyr::filter(species == "haddadus_binotatus") %>% 
-  dplyr::select(species, longitude, latitude) %>% 
-  dplyr::rename(decimallongitude = longitude,
-                decimallatitude = latitude) %>% 
-  sampbias::SamplingBias(x = ., 
-                         res = .1666667,
-                         buffer = .1666667*10, 
-                         biasdist = seq(0, 1e6, 2e4))
-sampbias_hb
-
-# maps
-sampbias_hb %>% plot
-
-# summary
-sampbias_hb_table <- sampbias_hb$biastable %>% 
-  dplyr::mutate(factors = rownames(sampbias_hb$biastable)) %>% 
-  tidyr::pivot_longer(-factors, names_to = "bias_dist", values_to = "bias_effect") %>% 
-  dplyr::mutate(bias_dist = as.numeric(bias_dist))
-sampbias_hb_table
-
-ggplot(data = sampbias_hb_table) +
-  aes(x = factors, y = bias_effect) +
-  geom_boxplot(fill = viridis::viridis(4)) +
-  geom_jitter(width = .2, size = .1) +
-  coord_flip() +
-  theme_bw()
-
-ggplot(data = ) +
-  aes(x = bias_dist/1e3, y = bias_effect, color = factors) +
-  geom_point() +
-  scale_color_viridis_d() +
-  scale_x_continuous(breaks = c(0, 250, 500, 750, 1000)) +
-  theme_bw()
-
-# brachycephalus ephippium
-# sampbias
-sampbias_be <- occ_data_tax_date_spa %>%
-  dplyr::filter(species == "brachycephalus_ephippium") %>% 
-  dplyr::select(species, longitude, latitude) %>% 
-  dplyr::rename(decimallongitude = longitude,
-                decimallatitude = latitude) %>% 
-  sampbias::SamplingBias(x = ., 
-                         res = 1, 
-                         biasdist = c(0, 5000, 10000))
-sampbias_be$biastable %>% row.names()
-
-# summary
-summary(sampbias_be)
-sampbias_be %>% plot
-sampbias_be$biastable
+# # import raster id
+# var_id <- raster::raster("/home/mude/data/gitlab/r-sdm/00_pragmatico/00_present/01_variables/03_var/bio02.tif")
+# var_id
+# 
+# var_id[!is.na(var_id)] <- raster::cellFromXY(var_id, raster::rasterToPoints(var_id)[, 1:2])
+# plot(var_id)
+# 
+# # oppc
+# occ_data_tax_date_spa_oppc <- occ_data_tax_date_spa %>% 
+#   dplyr::mutate(oppc = raster::extract(var_id, dplyr::select(., longitude, latitude))) %>% 
+#   dplyr::distinct(species, oppc, .keep_all = TRUE) %>% 
+#   dplyr::filter(!is.na(oppc)) %>% 
+#   dplyr::add_count(species) %>% 
+#   dplyr::arrange(species)
+# occ_data_tax_date_spa_oppc
+# 
+# # verify
+# table(occ_data_tax_date_spa$species)
+# table(occ_data_tax_date_spa_oppc$species)
+# 
+# # map
+# ggplot() +
+#   geom_sf(data = li %>% sf::st_crop(c(xmin = min(occ_data$longitude), ymin = min(occ_data$latitude), 
+#                                       xmax = max(occ_data$longitude), ymax = max(occ_data$latitude))),
+#           fill = "gray", alpha = .5) +
+#   geom_point(data = occ_data_tax_date_spa_oppc, aes(x = longitude, y = latitude, color = species)) +
+#   theme_bw()
+# 
+# # sample bias -------------------------------------------------------------
+# # haddadus binotatus
+# # sampbias
+# sampbias_hb <- occ_data_tax_date_spa %>%
+#   dplyr::filter(species == "haddadus_binotatus") %>% 
+#   dplyr::select(species, longitude, latitude) %>% 
+#   dplyr::rename(decimallongitude = longitude,
+#                 decimallatitude = latitude) %>% 
+#   sampbias::SamplingBias(x = ., 
+#                          res = .1666667,
+#                          buffer = .1666667*10, 
+#                          biasdist = seq(0, 1e6, 2e4))
+# sampbias_hb
+# 
+# # maps
+# sampbias_hb %>% plot
+# 
+# # summary
+# sampbias_hb_table <- sampbias_hb$biastable %>% 
+#   dplyr::mutate(factors = rownames(sampbias_hb$biastable)) %>% 
+#   tidyr::pivot_longer(-factors, names_to = "bias_dist", values_to = "bias_effect") %>% 
+#   dplyr::mutate(bias_dist = as.numeric(bias_dist))
+# sampbias_hb_table
+# 
+# ggplot(data = sampbias_hb_table) +
+#   aes(x = factors, y = bias_effect) +
+#   geom_boxplot(fill = viridis::viridis(4)) +
+#   geom_jitter(width = .2, size = .1) +
+#   coord_flip() +
+#   theme_bw()
+# 
+# ggplot(data = ) +
+#   aes(x = bias_dist/1e3, y = bias_effect, color = factors) +
+#   geom_point() +
+#   scale_color_viridis_d() +
+#   scale_x_continuous(breaks = c(0, 250, 500, 750, 1000)) +
+#   theme_bw()
+# 
+# # brachycephalus ephippium
+# # sampbias
+# sampbias_be <- occ_data_tax_date_spa %>%
+#   dplyr::filter(species == "brachycephalus_ephippium") %>% 
+#   dplyr::select(species, longitude, latitude) %>% 
+#   dplyr::rename(decimallongitude = longitude,
+#                 decimallatitude = latitude) %>% 
+#   sampbias::SamplingBias(x = ., 
+#                          res = 1, 
+#                          biasdist = c(0, 5000, 10000))
+# sampbias_be$biastable %>% row.names()
+# 
+# # summary
+# summary(sampbias_be)
+# sampbias_be %>% plot
+# sampbias_be$biastable
 
 # end ---------------------------------------------------------------------

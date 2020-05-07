@@ -1,6 +1,7 @@
-# Files #
-###################
+*.Rproj.user
 *.Rhistory
+*.RData
+*.Ruserdata
 *.csv
 *.xlsx
 *.png
@@ -9,7 +10,11 @@
 *.prj
 *.shp
 *.shx
+*.cpg
+*.qpj
 *.tif
 *.bil
 *.hdr
 *.xml
+*.pptx
+*.docx

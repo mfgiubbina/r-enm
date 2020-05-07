@@ -1,7 +1,7 @@
 #' ---
 #' title: ensemble - weighted average and uncertainties - hierarchical anova
 #' authors: mauricio vancine
-#' date: 2020-04-29
+#' date: 2020-05-05
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -10,7 +10,6 @@ rm(list = ls())
 
 # packages
 library(raster)
-library(rgdal)
 library(tidyverse)
 library(vegan)
 
@@ -19,7 +18,7 @@ raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
 raster::beginCluster(n = 2)
 
 # directory
-path <- "/home/mude/data/github/00_github_organizar/r-sdm/00_pragmatico/00_present"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present"
 setwd(path)
 dir()
 
@@ -33,8 +32,8 @@ eva <- dir(pattern = "00_evaluation_", recursive = TRUE) %>%
 eva
 
 # weighted average ensemble  ----------------------------------------------
-# auc
-auc_limit <- .75
+# tss
+tss_limit <- .5
 
 # directories
 setwd(path); dir.create("05_ensembles")
@@ -48,12 +47,12 @@ for(i in eva$species %>% unique){
   # selection
   eva_i <- eva %>% 
     dplyr::filter(species == i, 
-                  auc >= auc_limit)
+                  tss_spec_sens >= tss_limit)
   
-  # auc
-  auc_i <- eva_i %>% 
-    dplyr::select(auc) %>% 
-    dplyr::mutate(auc = (auc - .5) ^ 2) %>% 
+  # tss
+  tss_i <- eva_i %>% 
+    dplyr::select(tss_spec_sens) %>% 
+    dplyr::mutate(tss = (tss_spec_sens) ^ 2) %>% 
     dplyr::pull()
   
   # list algorithms
@@ -61,32 +60,36 @@ for(i in eva$species %>% unique){
   alg
   
   # list files
-  sdm_i_f <- eva_i %>% 
+  enm_i_f <- eva_i %>% 
     dplyr::select(file) %>% 
     dplyr::pull()
   
   # directory
-  setwd(path); setwd(paste0("03_sdm/", i))
+  setwd(path); setwd(paste0("03_enm/", i))
   
   # import
-  sdm_i_r <- grep(paste(sdm_i_f, collapse = "|"), dir(pattern = ".tif$"), value = TRUE) %>% 
+  enm_i_r <- dir(pattern = ".tif$") %>% 
+    stringr::str_subset(paste(enm_i_f, collapse = "|")) %>% 
     raster::stack()
   
   
   # standardization ---------------------------------------------------------
   print("Standardization can take a looong time...")
   
-  sdm_i_st <- NULL
+  enm_i_st <- NULL
   
   for(j in alg %>% unique){
     
+    # information
+    print(j)
+    
     # algoritm selection
-    sdm_i_r_alg_val <- sdm_i_r[[grep(j, names(sdm_i_r))]] %>% 
+    enm_i_r_alg_val <- enm_i_r[[grep(j, names(enm_i_r))]] %>% 
       raster::values()
     
     # standardization
-    sdm_i_alg_st <- vegan::decostand(sdm_i_r_alg_val, "range", na.rm = TRUE)
-    sdm_i_st <- cbind(sdm_i_st, sdm_i_alg_st)
+    enm_i_alg_st <- vegan::decostand(enm_i_r_alg_val, "range", na.rm = TRUE)
+    enm_i_st <- cbind(enm_i_st, enm_i_alg_st)
     
   }
   
@@ -95,9 +98,8 @@ for(i in eva$species %>% unique){
   print(paste("Weighted average ensemble to ", i))
   
   # weighted average ensemble
-  ens <- sdm_i_r[[1]]
-  ens[] <- apply(sdm_i_st, 1, function(x){sum(x * auc_i) / sum(auc_i)})
-  plot(ens, col = viridis::viridis(10))
+  ens <- enm_i_r[[1]]
+  ens[] <- apply(enm_i_st, 1, function(x){sum(x * tss_i) / sum(tss_i)})
   
   # directory
   setwd(path); setwd("05_ensembles")
@@ -116,7 +118,7 @@ for(i in eva$species %>% unique){
   print(paste("Uncertainties to", i))
   
   # suitability
-  sui <- sdm_i_st
+  sui <- enm_i_st
   
   # hierarchical anova
   sui_ms <- NULL
@@ -147,7 +149,7 @@ for(i in eva$species %>% unique){
   sui_ms_prop <- sui_ms/sui_ms_sum
   
   # mapping uncertainties
-  unc_r <- sdm_i_r[[1]]
+  unc_r <- enm_i_r[[1]]
   unc <- raster::stack()
   
   for(r in 1:ncol(sui_ms_prop)){
@@ -158,7 +160,6 @@ for(i in eva$species %>% unique){
   
   # names
   names(unc) <- c("algorithm", "residuals")
-  plot(unc, col = viridis::viridis(10))
   
   # table
   table_resume <- sui_ms_prop %>% 

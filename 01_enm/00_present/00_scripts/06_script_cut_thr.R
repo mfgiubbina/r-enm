@@ -1,7 +1,7 @@
 #' ---
 #' title: binatization - cut threshold ensembles and uncertainties - area
 #' authors: mauricio vancine
-#' date: 2020-04-29
+#' date: 2020-05-05
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -11,17 +11,16 @@ rm(list = ls())
 # packages
 library(landscapetools)
 library(raster)
-library(rgdal)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/00_github_organizar/r-sdm/00_pragmatico/00_present"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present"
 setwd(path)
 dir()
 
 # import data -------------------------------------------------------------
 # occ
-occ <- readr::read_csv("02_occurrences/03_clean/00_occ_clean_taxa_date_bias_limit_spatial_2020-04-29.csv")
+occ <- readr::read_csv("02_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
 # binatization and area ---------------------------------------------------
@@ -40,7 +39,7 @@ for(i in occ$species %>% unique){
   
   # presence and pseudo-absence
   setwd(path); setwd(paste0("04_evaluation/", i))
-  pa <- purrr::map_dfr(dir(pattern = "03_"), readr::read_csv) %>% 
+  pa <- purrr::map_dfr(dir(pattern = "pa_|pr_"), readr::read_csv) %>% 
     dplyr::mutate(species = i)
   
   # import ensembles
@@ -65,21 +64,27 @@ for(i in occ$species %>% unique){
   
   # maximum tss and kappa
   max_tss <- ecospat::ecospat.max.tss(Pred = pa_sui$sui, Sp.occ = pa_sui$pa)
-  max_kappa <- ecospat::ecospat.max.kappa(Pred = pa_sui$sui, Sp.occ = pa_sui$pa)
   
   # thrs
   thrs <- list(
-    lpt = min(pa_sui[pa_sui$pa == 1, "sui"]),
-    p10 = quantile(pa_sui[pa_sui$pa == 1, "sui"], .1) %>% as.numeric,
-    p20 = quantile(pa_sui[pa_sui$pa == 1, "sui"], .2) %>% as.numeric,
-    max_tss = max_tss$max.threshold,
-    max_kappa = max_kappa$max.threshold)
+    lpt = round(min(pa_sui[pa_sui$pa == 1, "sui"]), 2),
+    p10 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .1), 2) %>% as.numeric,
+    p20 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .2), 2) %>% as.numeric,
+    p30 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .3), 2) %>% as.numeric,
+    max_tss = max_tss$max.threshold)
+  
+  # tss
+  tss <- list(
+    lpt = max_tss$table[max_tss$table$threshold == thrs$lpt, 2],
+    p10 = max_tss$table[max_tss$table$threshold == thrs$p10, 2],
+    p20 = max_tss$table[max_tss$table$threshold == thrs$p20, 2],
+    p30 = max_tss$table[max_tss$table$threshold == thrs$p30, 2],
+    max_tss = max_tss$max.TSS)
   
   # directory
   setwd(path); setwd("06_ensembles_uncertainties_thrs")
   
-  # area
-  area <- NULL
+  # area table
   table_thr_area <- NULL
   
   # cuts
@@ -100,6 +105,7 @@ for(i in occ$species %>% unique){
                             tibble::tibble(species = i,
                                            threshold = names(thrs)[j],
                                            threshold_val = thrs[[j]] %>% round(3),
+                                           tss = tss[[j]]%>% round(3),
                                            area_total_km2 = sum(area) %>% round(3),
                                            presence_km2 = area[2] %>% round(3),
                                            presence_por = round(area[2]/sum(area)*100, 2),

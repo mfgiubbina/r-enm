@@ -176,6 +176,9 @@ for(i in occ$species %>% unique){ # for to each specie
       # model predict future
       for(f in stringr::str_sub(names(var_f), 1, 13) %>% unique){
         
+        # information
+        print(f)
+        
         # select variables
         var_f_sel <- var_f[[grep(f, names(var_f), value = TRUE)]]
         

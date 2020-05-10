@@ -29,6 +29,7 @@ if(!require(viridis)) install.packages("viridis")
 
 # download
 if(!require(rnaturalearth)) install.packages("rnaturalearth")
+if(!require(rvest)) install.packages("rvest")
 
 # selection - correlation
 if(!require(corrr)) install.packages("corrr")
@@ -43,11 +44,6 @@ if(!require(RStoolbox)) install.packages("RStoolbox")
 if(!require(psych)) install.packages("psych")
 
 # algorithms --------------------------------------------------------------
-# suppor analysis
-if(!require(ecospat)) install.packages("ecospat")
-if(!require(ENMTools)) install.packages("ENMTools")
-if(!require(ENMeval)) install.packages("ENMeval")
-
 # bioclim, domain, mahalanobis, and brt
 if(!require(dismo)) install.packages("dismo")
 

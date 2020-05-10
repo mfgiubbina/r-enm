@@ -70,7 +70,7 @@ for(i in eva$species %>% unique){
             axis.text.x = element_text(size = 12),
             axis.text.y = element_text(size = 15), 
             axis.title = element_text(size = 17))
-    ggsave(paste0("02_boxplot_jitter_an_", j, "_", i, ".png"), he = 15, wi = 15, un = "cm", dpi = 300)
+    ggsave(paste0("02_boxplot_jitter_an_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
     
   }
   

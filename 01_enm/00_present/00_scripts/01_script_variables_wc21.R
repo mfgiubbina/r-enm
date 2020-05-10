@@ -12,7 +12,7 @@ rm(list = ls())
 library(geobr)
 library(GGally)
 library(raster)
-library(rgdal)
+library(rvest)
 library(sf)
 library(tidyverse)
 library(tmap)
@@ -56,18 +56,33 @@ sf::write_sf(li_ex, "limit_ext.shp")
 setwd(path); dir.create("01_raw"); setwd("01_raw")
 getwd()
 
-# donwload
-var <- raster::getData(name = "worldclim", var = "bio", res = 10)
+# wordclim
+da_wc <- tibble::tibble(
+  url = paste0("https://biogeo.ucdavis.edu/data/worldclim/v2.1/base/",
+               c("wc2.1_10m_elev.zip", "wc2.1_10m_bio.zip")),
+  destfile = c("wc2.1_10m_elev.zip", "wc2.1_10m_bio.zip")
+) %>% as.list
+da_wc
+
+# download
+purrr::map2(da_wc$url, da_wc$destfile, download.file)
+
+# unzip
+purrr::map(dir(pattern = ".zip"), unzip)
+
+# import
+var <- dir(pattern = ".tif$") %>% 
+  raster::stack()
 var
 
-# names
+# rename
 names(var)
-names(var) <- c(paste0("bio0", 1:9), paste0("bio", 10:19))
+names(var) <- c("bio01", paste0("bio", 10:19), paste0("bio0", 2:9), "elev")
 names(var)
 var
 
 # plot
-tm_shape(var$bio01/10) +
+tm_shape(var$bio01) +
   tm_raster(palette = "-Spectral") +
   tm_layout(legend.position = c("left", "bottom"))
 
@@ -83,13 +98,13 @@ var_li
 # plot
 tm_shape(var_li$bio01) +
   tm_raster(palette = "-Spectral") +
-  tm_shape(br) +
+  tm_shape(li) +
   tm_borders(col = "black") +
   tm_layout(legend.position = c("right", "bottom"))
 
 # export
 raster::writeRaster(x = var_li, 
-                    filename = paste0("var_wc14_li_55km_", names(var_li)), 
+                    filename = paste0("var_wc21_li_55km_", names(var_li)), 
                     bylayer = TRUE, 
                     options = c("COMPRESS=DEFLATE"), 
                     format = "GTiff", 

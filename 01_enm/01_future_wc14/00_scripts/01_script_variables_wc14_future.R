@@ -1,7 +1,7 @@
 #' ---
 #' title: variables - download, adjust extention and resolution, and correlation to future
 #' author: mauricio vancine
-#' date: 2020-05-04
+#' date: 2020-05-09
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -22,7 +22,7 @@ raster::beginCluster(n = 4)
 raster::rasterOptions()
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_variables"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future_wc14/01_variables"
 setwd(path)
 dir()
 

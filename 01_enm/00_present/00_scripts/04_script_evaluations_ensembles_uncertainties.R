@@ -1,7 +1,7 @@
 #' ---
 #' title: ensemble - weighted average and uncertainties - hierarchical anova
 #' authors: mauricio vancine
-#' date: 2020-05-05
+#' date: 2020-05-09
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -12,6 +12,7 @@ rm(list = ls())
 library(raster)
 library(tidyverse)
 library(vegan)
+library(wesanderson)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
@@ -36,11 +37,62 @@ eva
 tss_limit <- .5
 
 # directories
-setwd(path); dir.create("05_ensembles")
+setwd(path); dir.create("05_ensembles_uncertainties")
 
 # ensemble
 for(i in eva$species %>% unique){
   
+  # information
+  print(paste("Evaluation to", i))
+  
+  # directory
+  setwd(path); setwd(paste0("04_evaluation/", i))
+  
+  # table
+  eva_table <- eva %>% 
+    dplyr::filter(species == i) %>% 
+    dplyr::mutate(species = species %>% stringr::str_to_title() %>% stringr::str_replace("_", " ")) %>% 
+    dplyr::group_by(species, algorithm) %>% 
+    dplyr::summarise(tss_mean = mean(tss_spec_sens) %>% round(3), 
+                     tss_sd = sd(tss_spec_sens) %>% round(3),
+                     auc_mean = mean(auc) %>% round(3), 
+                     auc_sd = sd(auc) %>% round(3))
+  eva_table
+  
+  # export
+  readr::write_csv(eva_table, paste0("01_evaluation_summary_table_", i, ".csv"))
+  
+  # boxplots
+  for(j in c("tss_spec_sens", "auc")){
+    
+    # information
+    print(paste(i, j))
+    
+    # plot  
+    eva %>% 
+      dplyr::filter(species == i) %>% 
+      ggplot() + 
+      aes_string(x = "algorithm", y = j, color = "algorithm") +
+      geom_boxplot(size = .5, fill = "gray90", color = "black") +
+      geom_jitter(width = 0.2, size = 4, alpha = .7) +
+      scale_color_manual(values = wesanderson::wes_palette(name = "Darjeeling1", n = eva$algorithm %>% unique %>% length, 
+                                                           type = "continuous")) +
+      labs(x = "Algorithms", 
+           y = stringr::str_to_upper(j) %>% stringr::str_replace("_", " "), 
+           title = i %>% stringr::str_to_title() %>% stringr::str_replace_all("_", " ")) + 
+      ylim(c(-.01, 1.05)) + 
+      theme_bw() +
+      geom_hline(yintercept = ifelse(j == "tss_spec_sens", .5, .75), color = "red") +
+      theme(legend.position = "none",
+            plot.title = element_text(face = "bold.italic", size = 20), 
+            axis.text.x = element_text(size = 12),
+            axis.text.y = element_text(size = 15), 
+            axis.title = element_text(size = 17))
+    ggsave(paste0("02_boxplot_jitter_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
+    
+  }
+
+  # ensemble ----------------------------------------------------------------
   # information
   print(paste("Ensemble to", i))
   
@@ -102,7 +154,7 @@ for(i in eva$species %>% unique){
   ens[] <- apply(enm_i_st, 1, function(x){sum(x * tss_i) / sum(tss_i)})
   
   # directory
-  setwd(path); setwd("05_ensembles")
+  setwd(path); setwd("05_ensembles_uncertainties"); dir.create(i); setwd(i)
   
   # export
   raster::writeRaster(x = ens, 
@@ -171,7 +223,7 @@ for(i in eva$species %>% unique){
                      min = min(values) %>% round(3),
                      max = max(values) %>% round(3))
 
-  readr::write_csv(table_resume, paste0("total_sum_squares_anova_", i, ".csv"))
+  readr::write_csv(table_resume, paste0("00_total_sum_squares_anova_", i, ".csv"))
   
   # export
   raster::writeRaster(x = unc, 
@@ -183,6 +235,23 @@ for(i in eva$species %>% unique){
                       overwrite = TRUE)
   
   print("All right, finish!")
+  
+  # combine
+  da_sui_unc <- tibble::tibble(sui = ens[], unc = unc$algorithm[])
+  
+  # uncertainties and suitability
+  ggplot(data = da_sui_unc) +
+    aes(x = sui, y = unc * 100) +
+    stat_density2d(aes(alpha = ..level.., fill = ..level..), size = 2, bins = 10, geom = "polygon") + 
+    scale_fill_gradient(low = "yellow", high = "red") +
+    scale_alpha(range = c(0.00, 0.5), guide = FALSE) +
+    geom_point(color = "black", size = .5, alpha = .5, pch = 20) +
+    geom_density2d(bins = 10) +
+    labs(x = "Suitability", y = "Algorithms uncertainties (%)") +
+    theme_bw() +
+    theme(axis.title = element_text(size = 15),
+          axis.text = element_text(size = 12))
+  ggsave(paste0("01_uncertainties_and_suitability_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
   
 } 
 

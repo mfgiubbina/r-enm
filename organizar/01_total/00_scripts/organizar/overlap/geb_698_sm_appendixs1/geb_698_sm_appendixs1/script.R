@@ -52,17 +52,16 @@ clim12<-rbind(clim1,clim2)
 occ.sp.aggr<-na.exclude(read.delim("CM_2009_05feb.txt",h=T,sep="\t"))
 
 # remove occurrences closer than a minimum distance to each other (remove aggregation). Setting min.dist=0 will remove no occurrence.
-
 occ.sp<-occ.desaggragation(df=occ.sp.aggr,colxy=1:2,min.dist=0.16666,plot=F)
 
 # create sp occurrence dataset by adding climate variables from the global climate datasets
 # resolution should be the resolution of the climate data grid
-
 occ.sp1<-na.exclude(sample.sp.globvar(dfsp=occ.sp,colspxy=1:2,colspkept=NULL,dfvar=clim1,colvarxy=1:2,colvar="all",resolution=0.16666))
 occ.sp2<-na.exclude(sample.sp.globvar(dfsp=occ.sp,colspxy=1:2,colspkept=NULL,dfvar=clim2,colvarxy=1:2,colvar="all",resolution=0.16666))
 
 # create presence/absence datasets (used in ENFA and SDMs)
 row.pa1<-sample.sp.globvar(dfsp=clim1,colspxy=1:2,colspkept=NULL,dfvar=occ.sp1,colvarxy=1:2,colvar=3,resolution=0) 
+
 #find rows of clim1 where the species is present
 pa<-data.frame((!is.na(row.pa1))*1);names(pa)<-"pa" #create 01 column
 pa1<-cbind(clim1,pa)
@@ -159,7 +158,7 @@ plot.overlap.test(b2,"D","Similarity 1->2")
 #################################### PCA-occ ####################################################
 #################################################################################################
 
-      # measures niche overlap along the two first axes of a PCA calibrated on occurence data
+# measures niche overlap along the two first axes of a PCA calibrated on occurence data
 			
 if(PROJ == F){	#fit of the analyse using occurences from both ranges
 	pca.cal <-dudi.pca(data.env.occ,row.w = row.w.occ, center = T, scale = T, scannf = F, nf = 2)

@@ -3,7 +3,6 @@
 # packages
 library(ecospat)
 library(raster)
-library(rgdal)
 
 # data
 data(ecospat.testNiche.inv)

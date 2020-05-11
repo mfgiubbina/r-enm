@@ -1,7 +1,7 @@
 #' ---
 #' title: install enm packages
 #' author: mauricio vancine
-#' date: 2020-05-05
+#' date: 2020-05-10
 #' ---
 
 # occurrences -------------------------------------------------------------
@@ -43,6 +43,11 @@ if(!require(RStoolbox)) install.packages("RStoolbox")
 if(!require(psych)) install.packages("psych")
 
 # algorithms --------------------------------------------------------------
+# suppor analysis
+if(!require(ecospat)) install.packages("ecospat")
+if(!require(ENMTools)) devtools::install_github("danlwarren/ENMTools")
+if(!require(ENMeval)) install.packages("ENMeval")
+
 # bioclim, domain, mahalanobis, and brt
 if(!require(dismo)) install.packages("dismo")
 

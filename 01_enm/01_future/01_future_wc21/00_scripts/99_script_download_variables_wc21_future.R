@@ -20,10 +20,10 @@ url <- "https://worldclim.org/data/cmip6/cmip6_clim10m.html" %>%
   xml2::read_html() %>% 
   rvest::html_nodes("a") %>% 
   rvest::html_attr("href") %>% 
-  stringr::str_subset("bioc") %>% # choose vars
-  stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
-  stringr::str_subset("ssp585") %>% # choose pathways 
-  stringr::str_subset("2061-2080|2081-2100") # choose periods
+  stringr::str_subset("bioc") # choose vars
+  #stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
+  #stringr::str_subset("ssp585") %>% # choose pathways 
+  #stringr::str_subset("2061-2080|2081-2100") # choose periods
 url
 
 destfiles <- "https://worldclim.org/data/cmip6/cmip6_clim10m.html" %>% 
@@ -31,9 +31,9 @@ destfiles <- "https://worldclim.org/data/cmip6/cmip6_clim10m.html" %>%
   rvest::html_nodes("a") %>% 
   rvest::html_attr("href") %>% 
   stringr::str_subset("bioc") %>% # choose vars
-  stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
-  stringr::str_subset("ssp585") %>% # choose pathways 
-  stringr::str_subset("2061-2080|2081-2100") %>% # choose periods
+  #stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
+  #stringr::str_subset("ssp585") %>% # choose pathways 
+  #stringr::str_subset("2061-2080|2081-2100") %>% # choose periods
   stringr::str_split(pattern = "[/]", simplify = TRUE) %>% 
   tibble::as_tibble() %>% 
   dplyr::select(9) %>% 
@@ -52,10 +52,10 @@ url <- "https://worldclim.org/data/cmip6/cmip6_clim5m.html" %>%
   xml2::read_html() %>% 
   rvest::html_nodes("a") %>% 
   rvest::html_attr("href") %>% 
-  stringr::str_subset("bioc") %>% # choose vars
-  stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
-  stringr::str_subset("ssp585") %>% # choose pathways 
-  stringr::str_subset("2061-2080|2081-2100") # choose periods
+  stringr::str_subset("bioc") # choose vars
+  #stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
+  #stringr::str_subset("ssp585") %>% # choose pathways 
+  #stringr::str_subset("2061-2080|2081-2100") # choose periods
 url
 
 destfiles <- "https://worldclim.org/data/cmip6/cmip6_clim5m.html" %>% 
@@ -63,9 +63,9 @@ destfiles <- "https://worldclim.org/data/cmip6/cmip6_clim5m.html" %>%
   rvest::html_nodes("a") %>% 
   rvest::html_attr("href") %>% 
   stringr::str_subset("bioc") %>% # choose vars
-  stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
-  stringr::str_subset("ssp585") %>% # choose pathways 
-  stringr::str_subset("2061-2080|2081-2100") %>% # choose periods
+  #stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
+  #stringr::str_subset("ssp585") %>% # choose pathways 
+  #stringr::str_subset("2061-2080|2081-2100") %>% # choose periods
   stringr::str_split(pattern = "[/]", simplify = TRUE) %>% 
   tibble::as_tibble() %>% 
   dplyr::select(9) %>% 
@@ -84,10 +84,10 @@ url <- "https://worldclim.org/data/cmip6/cmip6_clim2.5m.html" %>%
   xml2::read_html() %>% 
   rvest::html_nodes("a") %>% 
   rvest::html_attr("href") %>% 
-  stringr::str_subset("bioc") %>% # choose vars
-  stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
-  stringr::str_subset("ssp585") %>% # choose pathways 
-  stringr::str_subset("2061-2080|2081-2100") # choose periods
+  stringr::str_subset("bioc") # choose vars
+  #stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
+  #stringr::str_subset("ssp585") %>% # choose pathways 
+  #stringr::str_subset("2061-2080|2081-2100") # choose periods
 url
 
 destfiles <- "https://worldclim.org/data/cmip6/cmip6_clim2.5m.html" %>% 
@@ -95,9 +95,9 @@ destfiles <- "https://worldclim.org/data/cmip6/cmip6_clim2.5m.html" %>%
   rvest::html_nodes("a") %>% 
   rvest::html_attr("href") %>% 
   stringr::str_subset("bioc") %>% # choose vars
-  stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
-  stringr::str_subset("ssp585") %>% # choose pathways 
-  stringr::str_subset("2061-2080|2081-2100") %>% # choose periods
+  #stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1") %>% # choose gcms
+  #stringr::str_subset("ssp585") %>% # choose pathways 
+  #stringr::str_subset("2061-2080|2081-2100") %>% # choose periods
   stringr::str_split(pattern = "[/]", simplify = TRUE) %>% 
   tibble::as_tibble() %>% 
   dplyr::select(9) %>% 

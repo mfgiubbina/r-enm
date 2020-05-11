@@ -18,7 +18,7 @@ library(sf)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/02_occurrences"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21/02_occurrences"
 setwd(path)
 dir()
 

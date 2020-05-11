@@ -16,7 +16,7 @@ library(tidyverse)
 library(RColorBrewer)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
 setwd(path)
 dir()
 
@@ -61,7 +61,7 @@ for(i in occ$species %>% unique){
     coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
     labs(x = "Longitude", y = "Latitude", color = "Occurrences") +
     annotation_scale(location = "br", width_hint = .3) +
-    annotation_north_arrow(location = "br", which_north = "true", 
+    annotation_north_arrow(location = "tr", which_north = "true", 
                            pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
                            style = north_arrow_fancy_orienteering) +
     theme_bw() +
@@ -72,7 +72,7 @@ for(i in occ$species %>% unique){
                                            linetype = "solid", 
                                            colour = "black"),
           axis.title = element_text(size = 12, face = "plain"),
-          legend.position = c(.8, .185))
+          legend.position = c(.83, .185))
   map_occ
   
   # export
@@ -106,7 +106,7 @@ for(i in occ$species %>% unique){
     coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
     labs(x = "Longitude", y = "Latitude", fill = "Suitability", color = "Occurrences") +
     annotation_scale(location = "br", width_hint = .3) +
-    annotation_north_arrow(location = "br", which_north = "true", 
+    annotation_north_arrow(location = "tr", which_north = "true", 
                            pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
                            style = north_arrow_fancy_orienteering) +
     theme_bw() +
@@ -117,7 +117,7 @@ for(i in occ$species %>% unique){
                                            linetype = "solid", 
                                            colour = "black"),
           axis.title = element_text(size = 12, face = "plain"),
-          legend.position = c(.83, .16))
+          legend.position = c(.89, .17))
   map_sui
   
   # export
@@ -146,19 +146,20 @@ for(i in occ$species %>% unique){
       dplyr::rename(sui = names(ens[[j]])) %>% 
       dplyr::mutate(sui = ifelse(sui == 0, "Ausência potencial (0)", "Presença potencial (1)"))
     
+    thr <- dplyr::last(stringr::str_split(names(ens[[j]]), "_", simplify = TRUE))
+    
     map_thr <- ggplot() +
       geom_sf(data = sa) +
       geom_raster(data = da, aes(x, y, fill = sui)) +
+      geom_sf(data = sa, fill = NA) +
       geom_sf(data = li, fill = NA, color = "gray30") +
-      # geom_point(data = occ %>% dplyr::filter(species == i), 
-      #            aes(longitude, latitude, color = species %>% str_to_title() %>% sub("_", " ", .)), 
-      #            size = 2, alpha = .7) +
       scale_color_manual(values = "black", guide = guide_legend(order = 1)) +
-      scale_fill_manual(values = c("#3B9AB2", "#F21A00")) +
+      scale_fill_manual(values = c("lightsteelblue", "#F21A00")) +
       coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
-      labs(x = "Longitude", y = "Latitude", fill = "Adequabilidade", color = "Ocorrências") +
+      labs(x = "Longitude", y = "Latitude", color = "Ocorrências",
+           fill = paste0("Adequabilidade (", thr, ")")) +
       annotation_scale(location = "br", width_hint = .3) +
-      annotation_north_arrow(location = "br", which_north = "true", 
+      annotation_north_arrow(location = "tr", which_north = "true", 
                              pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
                              style = north_arrow_fancy_orienteering) +
       theme_bw() +
@@ -169,7 +170,7 @@ for(i in occ$species %>% unique){
                                              linetype = "solid", 
                                              colour = "black"),
             axis.title = element_text(size = 12, face = "plain"),
-            legend.position = c(.8, .18))
+            legend.position = c(.81, .15))
     map_thr
     
     # export
@@ -208,7 +209,7 @@ for(i in occ$species %>% unique){
       coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
       labs(x = "Longitude", y = "Latitude", fill = "Uncertainties (%)", color = "Occurrences") +
       annotation_scale(location = "br", width_hint = .3) +
-      annotation_north_arrow(location = "br", which_north = "true", 
+      annotation_north_arrow(location = "tr", which_north = "true", 
                              pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
                              style = north_arrow_fancy_orienteering) +
       theme_bw() +
@@ -219,7 +220,7 @@ for(i in occ$species %>% unique){
                                              linetype = "solid", 
                                              colour = "black"),
             axis.title = element_text(size = 12, face = "plain"),
-            legend.position = c(.8, .15))
+            legend.position = c(.87, .16))
     map_unc
     
     # export

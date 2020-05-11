@@ -14,6 +14,7 @@ options(java.parameters = "-Xmx1g")
 # packages
 library(dismo)
 library(e1071)
+library(gam)
 library(randomForest)
 library(raster)
 library(rJava)
@@ -138,9 +139,12 @@ for(i in occ$species %>% unique){ # for to each specie
     
     # presence-only - distance-based
     DOM <- dismo::domain(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
+    MAH <- dismo::mahal(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
     
     # presence-absence - statistics
     GLM <- glm(formula = pb ~ ., data = train_pa, family = "binomial")
+    GAM <- gam::gam(formula = paste0("pb", "~", paste0("s(", colnames(train_pa)[-1], ")", collapse = "+")) %>% as.formula, 
+                    family = "binomial", data = train, warning = FALSE)
     
     # presence-absence - machine learning
     RFR <- randomForest::randomForest(formula = pb ~ ., data = train_pa)

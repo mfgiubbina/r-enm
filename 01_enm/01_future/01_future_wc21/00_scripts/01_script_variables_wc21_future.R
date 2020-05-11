@@ -11,7 +11,7 @@ rm(list = ls())
 # packages
 library(geobr)
 library(GGally)
-library(raster)
+library(terra)
 library(rvest)
 library(sf)
 library(tidyverse)
@@ -23,7 +23,7 @@ raster::beginCluster(n = 4)
 raster::rasterOptions()
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_variables"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future_wc21/01_variables"
 setwd(path)
 dir()
 
@@ -71,13 +71,18 @@ purrr::map2(da_wc$url, da_wc$destfile, download.file)
 # unzip
 purrr::map(dir(pattern = ".zip"), unzip)
 
+# import
+var_p <- dir(pattern = ".tif$") %>% 
+  raster::stack()
+var_p
 
+## future
 # download future bioclimates - https://worldclim.org/data/cmip6/cmip6_clim10m.html
 url <- "https://worldclim.org/data/cmip6/cmip6_clim10m.html" %>% 
   xml2::read_html() %>% 
   rvest::html_nodes("a") %>% 
   rvest::html_attr("href") %>% 
-  stringr::str_subset("_bioc_") %>% 
+  stringr::str_subset("bioc") %>% 
   stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1|GFDL-ESM4|IPSL-CM6A-LR|MIROC-ES2L|MRI-ESM2-0", negate = TRUE) %>% 
   stringr::str_subset("ssp126", negate = TRUE)
 url
@@ -86,7 +91,7 @@ destfiles <- "https://worldclim.org/data/cmip6/cmip6_clim10m.html" %>%
   xml2::read_html() %>% 
   rvest::html_nodes("a") %>% 
   rvest::html_attr("href") %>% 
-  stringr::str_subset("_bioc_") %>% 
+  stringr::str_subset("bioc") %>% 
   stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1|GFDL-ESM4|IPSL-CM6A-LR|MIROC-ES2L|MRI-ESM2-0", negate = TRUE) %>% 
   stringr::str_subset("ssp126", negate = TRUE) %>% 
   stringr::str_split(pattern = "[/]", simplify = TRUE) %>% 
@@ -100,8 +105,6 @@ purrr::map2(url, destfiles, download.file)
 
 # unzip
 purrr::map(dir(pattern = ".zip"), unzip)
-
-
 
 # adust extention and resolution ------------------------------------------
 # directory

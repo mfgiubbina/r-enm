@@ -14,18 +14,29 @@ options(java.parameters = "-Xmx1g")
 # packages
 library(dismo)
 library(e1071)
+library(gam)
 library(randomForest)
 library(raster)
 library(rJava)
 library(sf)
 library(tidyverse)
 
+# maxent
+if(file.exists(paste0(system.file(package = "dismo"), "/java/maxent.jar"))){
+  print("File maxent.jar found!")
+  } else{
+  print(paste0("File maxent.jar not found! Downloading in ", paste0(system.file(package = "dismo"), "/java")))
+  setwd(paste0(system.file(package = "dismo"), "/java"))
+  download.file("https://biodiversityinformatics.amnh.org/open_source/maxent/maxent.php?op=download",
+                "maxent.zip")
+  unzip("maxent.zip")}
+
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
 raster::beginCluster(n = 2)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
 setwd(path)
 dir()
 
@@ -39,7 +50,7 @@ setwd(path); setwd("01_variables/04_processed_correlation"); dir()
 var <- dir(pattern = "tif$") %>% 
   raster::stack() %>% 
   raster::brick()
-names(var) <- stringr::str_replace(names(var), "var_wc14_55km_", "")
+names(var) <- stringr::str_replace(names(var), "var_wc21_55km_", "")
 names(var)
 var
 
@@ -55,7 +66,7 @@ partition <- .7
 bkg_n <- 1e5
 
 # enms
-for(i in occ$species %>% unique){ # for to each specie
+for(i in occ$species %>% unique){
   
   # directory
   dir.create(i); setwd(i)
@@ -82,7 +93,7 @@ for(i in occ$species %>% unique){ # for to each specie
   # ------------------------------------------------------------------------
   
   # replicas
-  for(r in replica %>% seq){	# number of replicas
+  for(r in replica %>% seq){
     
     # object for evaluation
     eval_algorithm <- tibble::tibble()
@@ -123,9 +134,12 @@ for(i in occ$species %>% unique){ # for to each specie
     
     # presence-only - distance-based
     DOM <- dismo::domain(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
-  
+    MAH <- dismo::mahal(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
+    
     # presence-absence - statistics
     GLM <- glm(formula = pb ~ ., data = train_pa, family = "binomial")
+    GAM <- gam::gam(formula = paste0("pb", "~", paste0("s(", colnames(train_pa)[-1], ")", collapse = "+")) %>% as.formula, 
+                    family = "binomial", data = train_pa, warning = FALSE)
     
     # presence-absence - machine learning
     RFR <- randomForest::randomForest(formula = pb ~ ., data = train_pa)
@@ -136,7 +150,9 @@ for(i in occ$species %>% unique){ # for to each specie
     MAX <- dismo::maxent(x = train_pb %>% dplyr::select(-pb), p = train_pb %>% dplyr::select(pb))
     
     # lists
-    fit <- list(bioclim = BIO, domain = DOM, glm = GLM, randomforest = RFR, svm = SVM, maxent = MAX)
+    fit <- list(bioclim = BIO, domain = DOM, mahalanobis = MAH,
+                glm = GLM, gam = GAM, randomforest = RFR, svm = SVM, 
+                maxent = MAX)
     
     # ------------------------------------------------------------------------
     

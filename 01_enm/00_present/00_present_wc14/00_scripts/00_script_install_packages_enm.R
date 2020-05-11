@@ -1,7 +1,7 @@
 #' ---
 #' title: install enm packages
 #' author: mauricio vancine
-#' date: 2020-05-05
+#' date: 2020-05-10
 #' ---
 
 # occurrences -------------------------------------------------------------
@@ -45,7 +45,7 @@ if(!require(psych)) install.packages("psych")
 # algorithms --------------------------------------------------------------
 # suppor analysis
 if(!require(ecospat)) install.packages("ecospat")
-if(!require(ENMTools)) install.packages("ENMTools")
+if(!require(ENMTools)) devtools::install_github("danlwarren/ENMTools")
 if(!require(ENMeval)) install.packages("ENMeval")
 
 # bioclim, domain, mahalanobis, and brt

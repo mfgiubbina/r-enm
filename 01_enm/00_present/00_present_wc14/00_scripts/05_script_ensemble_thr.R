@@ -13,7 +13,7 @@ library(raster)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
 setwd(path)
 dir()
 
@@ -38,7 +38,7 @@ for(i in occ$species %>% unique){
   
   # presence and pseudo-absence
   setwd(path); setwd(paste0("04_evaluation/", i))
-  pa <- purrr::map_dfr(dir(pattern = "pa_|pr_"), readr::read_csv) %>% 
+  pa <- purrr::map_dfr(dir(pattern = "pa_|pr_"), col_types = cols(), readr::read_csv) %>% 
     dplyr::mutate(species = i)
   
   # import ensembles

@@ -1,7 +1,7 @@
 #' ---
 #' title: variables - download, adjust extention and resolution, and correlation
 #' author: mauricio vancine
-#' date: 2019-05-05
+#' date: 2019-05-10
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -23,7 +23,7 @@ raster::beginCluster(n = 4)
 raster::rasterOptions()
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/01_variables"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21/01_variables"
 setwd(path)
 dir()
 
@@ -179,7 +179,7 @@ getwd()
 
 # export
 raster::writeRaster(x = raster::subset(var_li, colnames(var_da_cor07)), 
-                    filename = paste0("var_wc14_55km_", colnames(var_da_cor07)), 
+                    filename = paste0("var_wc21_55km_", colnames(var_da_cor07)), 
                     bylayer = TRUE, 
                     options = c("COMPRESS=DEFLATE"), 
                     format = "GTiff",

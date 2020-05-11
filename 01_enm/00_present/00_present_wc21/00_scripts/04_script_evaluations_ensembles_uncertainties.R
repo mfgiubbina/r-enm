@@ -1,7 +1,7 @@
 #' ---
 #' title: ensemble - weighted average and uncertainties - hierarchical anova
 #' authors: mauricio vancine
-#' date: 2020-05-09
+#' date: 2020-05-10
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -19,7 +19,7 @@ raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
 raster::beginCluster(n = 2)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
 setwd(path)
 dir()
 

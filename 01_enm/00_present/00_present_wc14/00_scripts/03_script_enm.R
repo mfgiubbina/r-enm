@@ -21,6 +21,10 @@ library(rJava)
 library(sf)
 library(tidyverse)
 
+# raster options
+raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
+raster::beginCluster(n = parallel::detectCores() - 1)
+
 # maxent
 if(file.exists(paste0(system.file(package = "dismo"), "/java/maxent.jar"))){
   print("File maxent.jar found!")
@@ -30,10 +34,6 @@ if(file.exists(paste0(system.file(package = "dismo"), "/java/maxent.jar"))){
   download.file("https://biodiversityinformatics.amnh.org/open_source/maxent/maxent.php?op=download",
                 "maxent.zip")
   unzip("maxent.zip")}
-
-# raster options
-raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-raster::beginCluster(n = 2)
 
 # directory
 path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
@@ -149,7 +149,7 @@ for(i in occ$species %>% unique){
     Sys.setenv(NOAWT = TRUE)
     MAX <- dismo::maxent(x = train_pb %>% dplyr::select(-pb), p = train_pb %>% dplyr::select(pb))
     
-    # lists
+    # methods list
     fit <- list(bioclim = BIO, domain = DOM, mahalanobis = MAH, 
                 glm = GLM, gam = GAM, randomforest = RFR, svm = SVM, 
                 maxent = MAX)

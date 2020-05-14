@@ -1,7 +1,7 @@
 #' ---
 #' title: variables - download, adjust extention and resolution, and correlation to future
 #' author: mauricio vancine
-#' date: 2020-05-09
+#' date: 2020-05-11
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -19,10 +19,9 @@ library(tmap)
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
 raster::beginCluster(n = 4)
-raster::rasterOptions()
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future_wc14/01_variables"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14/01_variables"
 setwd(path)
 dir()
 
@@ -124,7 +123,7 @@ plot(var_f_li[[1]])
 
 # export present
 raster::writeRaster(x = var_p_li, 
-                    filename = paste0("wc14_li_55km_present_", names(var_p_li)), 
+                    filename = paste0("var_wc14_li_55km_present_", names(var_p_li)), 
                     bylayer = TRUE, 
                     options = c("COMPRESS=DEFLATE"), 
                     format = "GTiff",
@@ -133,7 +132,7 @@ raster::writeRaster(x = var_p_li,
 
 # export
 raster::writeRaster(x = var_f_li, 
-                    filename = paste0("wc14_li_55km_future_", names(var_f_li)), 
+                    filename = paste0("var_wc14_li_55km_future_", names(var_f_li)), 
                     bylayer = TRUE, 
                     options = c("COMPRESS=DEFLATE"), 
                     format = "GTiff", 
@@ -165,7 +164,7 @@ cor_table_summary <- cor_table %>%
 cor_table_summary
 
 # export
-readr::write_csv(cor_table_summary, "correlation.csv")
+readr::write_csv(cor_table_summary, "var_correlation.csv")
 
 # select variables
 # correlated variables
@@ -198,8 +197,7 @@ var_ggpairs <- var_da_cor07 %>%
           axisLabels = "none") +
   theme_bw()
 var_ggpairs
-ggsave(filename = "correlation_plot.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
-
+ggsave(filename = "var_correlation_plot.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
 
 # export variables --------------------------------------------------------
 # directory
@@ -212,7 +210,7 @@ var_p_li_sel
 
 # export present
 raster::writeRaster(x = var_p_li_sel, 
-                    filename = paste0("wc14_55km_present_", names(var_p_li_sel)), 
+                    filename = paste0("var_wc14_55km_present_", names(var_p_li_sel)), 
                     bylayer = TRUE, 
                     options = c("COMPRESS=DEFLATE"), 
                     format = "GTiff",
@@ -225,7 +223,7 @@ var_f_li_sel
 
 # export
 raster::writeRaster(x = var_f_li_sel, 
-                    filename = paste0("wc14_55km_future_", names(var_f_li_sel)), 
+                    filename = paste0("var_wc14_55km_future_", names(var_f_li_sel)), 
                     bylayer = TRUE, 
                     options = c("COMPRESS=DEFLATE"), 
                     format = "GTiff", 

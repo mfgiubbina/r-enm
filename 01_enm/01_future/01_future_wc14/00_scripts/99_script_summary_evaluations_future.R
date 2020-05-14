@@ -1,7 +1,7 @@
 #' ---
 #' title: evaluate - table and boxplot
 #' authors: mauricio vancine
-#' date: 2020-04-29
+#' date: 2020-05-11
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -13,7 +13,7 @@ library(tidyverse)
 library(wesanderson)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/04_evaluation"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
 setwd(path)
 dir()
 
@@ -31,7 +31,7 @@ for(i in eva$species %>% unique){
   
   # tables
   # directory
-  setwd(path); setwd(i)
+  setwd(path); setwd(paste0("04_evaluation/", i))
   
   # table
   eva_table <- eva_sp %>% 
@@ -53,7 +53,9 @@ for(i in eva$species %>% unique){
     print(paste(i, j))
     
     # plot  
-    ggplot(data = eva_sp) + 
+    eva %>% 
+      dplyr::filter(species == i) %>% 
+      ggplot() + 
       aes_string(x = "algorithm", y = j, color = "algorithm") +
       geom_boxplot(size = .5, fill = "gray90", color = "black") +
       geom_jitter(width = 0.2, size = 4, alpha = .7) +
@@ -61,7 +63,7 @@ for(i in eva$species %>% unique){
                                                            type = "continuous")) +
       labs(x = "Algorithms", 
            y = stringr::str_to_upper(j) %>% stringr::str_replace("_", " "), 
-           title = i %>% stringr::str_to_title() %>% stringr::str_replace("_", " ")) + 
+           title = i %>% stringr::str_to_title() %>% stringr::str_replace_all("_", " ")) + 
       ylim(c(-.01, 1.05)) + 
       theme_bw() +
       geom_hline(yintercept = ifelse(j == "tss_spec_sens", .5, .75), color = "red") +
@@ -70,7 +72,7 @@ for(i in eva$species %>% unique){
             axis.text.x = element_text(size = 12),
             axis.text.y = element_text(size = 15), 
             axis.title = element_text(size = 17))
-    ggsave(paste0("02_boxplot_jitter_an_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
+    ggsave(paste0("02_boxplot_jitter_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
     
   }
   

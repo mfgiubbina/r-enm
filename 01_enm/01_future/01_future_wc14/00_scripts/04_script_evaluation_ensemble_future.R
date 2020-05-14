@@ -1,7 +1,7 @@
 #' ---
 #' title: ensemble - weighted average and uncertainties - hierarchical anova
 #' authors: mauricio vancine
-#' date: 2020-05-12
+#' date: 2020-05-13
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -12,14 +12,13 @@ rm(list = ls())
 library(raster)
 library(tidyverse)
 library(vegan)
-library(wesanderson)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
 raster::beginCluster(n = parallel::detectCores() - 1)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
 setwd(path)
 dir()
 
@@ -29,7 +28,7 @@ setwd("04_evaluation")
 
 # import evaluations
 eva <- dir(pattern = "00_evaluation_", recursive = TRUE) %>% 
-  purrr::map_dfr(., col_types = cols(), readr::read_csv)
+  purrr::map_dfr(., readr::read_csv)
 eva
 
 # weighted average ensemble  ----------------------------------------------
@@ -45,7 +44,7 @@ for(i in eva$species %>% unique){}
   # evaluation --------------------------------------------------------------
   # information
   print(paste("Evaluation to", i))
-  
+
   # directory
   setwd(path); setwd(paste0("04_evaluation/", i))
   
@@ -92,8 +91,9 @@ for(i in eva$species %>% unique){}
     ggsave(paste0("02_boxplot_jitter_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
     
   }
+  
 
-  # ensemble ----------------------------------------------------------------
+  # ensemeble ---------------------------------------------------------------
   # information
   print(paste("Ensemble to", i))
   
@@ -108,10 +108,6 @@ for(i in eva$species %>% unique){}
     dplyr::mutate(tss = (tss_spec_sens) ^ 2) %>% 
     dplyr::pull()
   
-  # list algorithms
-  alg <- eva_i$algorithm
-  alg
-  
   # list files
   enm_i_f <- eva_i %>% 
     dplyr::select(file) %>% 
@@ -124,47 +120,97 @@ for(i in eva$species %>% unique){}
   enm_i_r <- dir(pattern = ".tif$") %>% 
     stringr::str_subset(paste(enm_i_f, collapse = "|")) %>% 
     raster::stack()
+  names(enm_i_r) <- stringr::str_replace(names(enm_i_r), "_present", "__presemt")
   
+  # infos
+  names(enm_i_r)
+  gcm <- stringr::str_split_fixed(names(enm_i_r), "_", 8)[, 6] %>% 
+    stringi::stri_remove_empty() %>% 
+    unique
+  
+  alg <- stringr::str_split_fixed(names(enm_i_r), "_", 9)[, 4] %>% 
+    unique
+  
+  cen <- stringr::str_split_fixed(names(enm_i_r), "_", 7)[, 7] %>%
+    unique
   
   # standardization ---------------------------------------------------------
   print("Standardization can take a looong time...")
   
-  enm_i_st <- NULL
+  enm_i_st <- tibble::tibble(cenarios = rep(cen, each = ncell(enm_i_r)))
   
-  for(j in alg %>% unique){
+  for(g in gcm){}
     
     # information
-    print(j)
+    print(paste("Standardization to GCM", g))
     
-    # algoritm selection
-    enm_i_r_alg_val <- enm_i_r[[grep(j, names(enm_i_r))]] %>% 
-      raster::values()
+    enm_i_r_gcm <- enm_i_r[[c(grep("present", names(enm_i_r)), grep(g, names(enm_i_r)))]]
     
-    # standardization
-    enm_i_alg_st <- vegan::decostand(enm_i_r_alg_val, "range", na.rm = TRUE)
-    enm_i_st <- cbind(enm_i_st, enm_i_alg_st)
+    enm_i_gcm_alg_st <- NULL
+    enm_i_gcm_st <- tibble::tibble(cenarios = rep(sub("_", "", cen), each = ncell(enm_i_r)))
+    
+    for(a in alg){
+      
+      # information
+      print(paste("Standardization to algoritm", a))
+      
+      enm_i_r_gcm_alg <- enm_i_r_gcm[[grep(a, names(enm_i_r_gcm))]]
+      enm_i_r_gcm_alg_ce_val <- NULL
+      
+      for(c in cen){
+        
+        enm_i_r_gcm_alg_ce_t <- enm_i_r_gcm_alg[[grep(c, names(enm_i_r_gcm_alg))]]
+        
+        enm_i_r_gcm_alg_ce <- enm_i_r_gcm_alg_ce_t %>% 
+          raster::values() %>% 
+          tibble::as_tibble() %>% 
+          dplyr::bind_cols(cenarios = rep(c, nrow(.)), .)
+        
+        colnames(enm_i_r_gcm_alg_ce) <- c("cenarios", paste0(eva_i[eva_i$algorithm == a, "file"] %>% dplyr::pull(), "_", gsub("_", "", g)))
+        
+        enm_i_r_gcm_alg_ce_val <- rbind(enm_i_r_gcm_alg_ce_val, enm_i_r_gcm_alg_ce)
+        
+      }
+      
+      enm_i_gcm_alg_st <- vegan::decostand(enm_i_r_gcm_alg_ce_val[, -1], "range", na.rm = TRUE)
+      enm_i_gcm_st <- cbind(enm_i_gcm_st, enm_i_gcm_alg_st)
+      
+    }
+    
+    enm_i_st <- cbind(enm_i_st, enm_i_gcm_st[, -1])
     
   }
   
-  # weighted average ensemble -----------------------------------------------
-  # information
-  print(paste("Weighted average ensemble to ", i))
+  enm_i_st
   
+  # weighted average ensemble -----------------------------------------------
   # directory
   setwd(path); setwd("05_ensembles_uncertainties"); dir.create(i); setwd(i)
   
-  # weighted average ensemble
-  ens <- enm_i_r[[1]]
-  ens[] <- apply(enm_i_st, 1, function(x){sum(x * tss_i) / sum(tss_i)})
-  
-  # export
-  raster::writeRaster(x = ens, 
-                      filename = paste0("ensemble_", i), 
-                      format = "GTiff", 
-                      options = c("COMPRESS=DEFLATE"), 
-                      progress = "text",
-                      overwrite = TRUE)
-  
+  # ensemble
+  for(c in cen){
+    
+    # information
+    print(paste("Weighted average ensemble to", i, "and", c))
+    
+    # selection
+    enm_i_st_ce <- enm_i_st %>%
+      dplyr::filter(cenarios == c) %>% 
+      dplyr::select(-1)
+    
+    # weighted average
+    ens <- enm_i_r[[1]]
+    ens[] <- apply(enm_i_st_ce, 1, function(x){sum(x * tss_i) / sum(tss_i)})
+    
+    # export
+    raster::writeRaster(x = ens, 
+                        filename = paste0("ensemble_weighted_average_", i, "_", c), 
+                        format = "GTiff", 
+                        options = c("COMPRESS=DEFLATE"), 
+                        progress = "text",
+                        overwrite = TRUE)
+    
+  }
   
   # uncertainties - hierarchical anova --------------------------------------
   # information
@@ -179,16 +225,16 @@ for(i in eva$species %>% unique){}
   for(p in 1:nrow(sui)){
     
     sui_p <- as.numeric(sui[p, ])
-
+    
     if(any(is.na(sui_p))){
       
       sui_ms <- rbind(sui_ms, rep(NA, 2))
       
     } else{
       
-        lm_model <- lm(sui_p ~ alg)
-        anova_model <- anova(lm_model)
-        sui_ms <- rbind(sui_ms, anova_model$"Mean Sq")
+      lm_model <- lm(sui_p ~ alg)
+      anova_model <- anova(lm_model)
+      sui_ms <- rbind(sui_ms, anova_model$"Mean Sq")
     }
     
   }
@@ -206,9 +252,9 @@ for(i in eva$species %>% unique){}
   unc <- raster::stack()
   
   for(r in 1:ncol(sui_ms_prop)){
-
-      unc_r[] <- sui_ms_prop[, r]
-      unc <- raster::stack(unc, unc_r)
+    
+    unc_r[] <- sui_ms_prop[, r]
+    unc <- raster::stack(unc, unc_r)
   }
   
   # names
@@ -223,7 +269,7 @@ for(i in eva$species %>% unique){}
     dplyr::summarise(median = median(values) %>% round(3),
                      min = min(values) %>% round(3),
                      max = max(values) %>% round(3))
-
+  
   readr::write_csv(table_resume, paste0("00_total_sum_squares_anova_", i, ".csv"))
   
   # export
@@ -237,23 +283,6 @@ for(i in eva$species %>% unique){}
   
   print("All right, finish!")
   
-  # combine
-  da_sui_unc <- tibble::tibble(sui = ens[], unc = unc$algorithm[])
+}
   
-  # uncertainties and suitability
-  ggplot(data = da_sui_unc) +
-    aes(x = sui, y = unc * 100) +
-    stat_density2d(aes(alpha = ..level.., fill = ..level..), size = 2, bins = 10, geom = "polygon") + 
-    scale_fill_gradient(low = "yellow", high = "red") +
-    scale_alpha(range = c(0.00, 0.5), guide = FALSE) +
-    geom_point(color = "black", size = .5, alpha = .5, pch = 20) +
-    geom_density2d(bins = 10) +
-    labs(x = "Suitability", y = "Algorithms uncertainties (%)") +
-    theme_bw() +
-    theme(axis.title = element_text(size = 15),
-          axis.text = element_text(size = 12))
-  ggsave(paste0("01_uncertainties_and_suitability_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
-  
-} 
-
 # end ---------------------------------------------------------------------

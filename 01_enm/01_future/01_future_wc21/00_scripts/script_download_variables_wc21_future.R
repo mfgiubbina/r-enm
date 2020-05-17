@@ -65,7 +65,7 @@ url_5m <- "https://worldclim.org/data/cmip6/cmip6_clim5m.html" %>%
   stringr::str_subset("bioc_") %>% # choose vars
   stringr::str_subset("") %>% # choose gcms
   stringr::str_subset("") %>% # choose pathways 
-  stringr::str_subset("") %>% # choose periods
+  stringr::str_subset("") # choose periods
 url_5m
 
 destfiles_5m <- "https://worldclim.org/data/cmip6/cmip6_clim5m.html" %>% 
@@ -100,7 +100,7 @@ url_2_5m <- "https://worldclim.org/data/cmip6/cmip6_clim2.5m.html" %>%
   stringr::str_subset("bioc_") %>% # choose vars
   stringr::str_subset("") %>% # choose gcms
   stringr::str_subset("") %>% # choose pathways 
-  stringr::str_subset("") %>% # choose periods
+  stringr::str_subset("") # choose periods
 url_2_5m
 
 destfiles_2_5m <- "https://worldclim.org/data/cmip6/cmip6_clim2.5m.html" %>% 

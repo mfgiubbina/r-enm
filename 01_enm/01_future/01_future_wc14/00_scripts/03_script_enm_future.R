@@ -1,7 +1,7 @@
 #' ---
 #' title: enm - multiple algorithm
 #' authors: matheus lima-ribeiro, mauricio vancine
-#' date: 2020-05-11
+#' date: 2020-05-15
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -111,7 +111,7 @@ for(i in occ$species %>% unique){
   for(r in replica %>% seq){
     
     # object for evaluation
-    eval_algorithm <- tibble::tibble()
+    eval_method <- tibble::tibble()
     
     # partitioning data	
     pr_sample_train <- pr_specie %>% 
@@ -227,19 +227,19 @@ for(i in occ$species %>% unique){
       # evaluation data
       eval_data <- tibble::tibble(species = i, 
                                   replica = r, 
-                                  algorithm = fit[a] %>% names, 
+                                  method = fit[a] %>% names, 
                                   thr_max_spec_sens = dismo::threshold(eval, "spec_sens"),
                                   tss_spec_sens = tss_spec_sens,
                                   auc = eval@auc, 
-                                  file = paste0("enm_", i, "_", fit[a] %>% names, "_r", ifelse(r < 10, paste0("0", r), r), "_"))
+                                  file = paste0("enm_", i, "_", fit[a] %>% names, "_r", ifelse(r < 10, paste0("0", r), r)))
       
       # combine evaluation
-      eval_algorithm <- dplyr::bind_rows(eval_algorithm, eval_data)
+      eval_method <- dplyr::bind_rows(eval_method, eval_data)
       
     } # ends for "a"
     
     # combine evaluation
-    eval_species <- dplyr::bind_rows(eval_species, eval_algorithm)
+    eval_species <- dplyr::bind_rows(eval_species, eval_method)
     
   } # ends for "r"
   

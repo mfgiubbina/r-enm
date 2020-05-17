@@ -1,5 +1,5 @@
 #' ---
-#' title: sdm - multiple algorithm
+#' title: sdm - multiple method
 #' authors: matheus lima-ribeiro, mauricio vancine
 #' date: 2020-05-09
 #' ---
@@ -96,7 +96,7 @@ for(i in occ$species %>% unique){
   for(r in replica %>% seq){
     
     # object for evaluation
-    eval_algorithm <- tibble::tibble()
+    eval_method <- tibble::tibble()
     
     # partitioning data	
     pr_sample_train <- pr_specie %>% 
@@ -128,18 +128,18 @@ for(i in occ$species %>% unique){
     # information
     print(paste("Models fitting to", i, "replica", r, "of", replica))
     
-    # algorithms
+    # methods
     # presence-only - envelope
     BIO <- dismo::bioclim(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
     
     # presence-only - distance-based
     DOM <- dismo::domain(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
-    MAH <- dismo::mahal(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
+    # MAH <- dismo::mahal(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
     
     # presence-absence - statistics
-    GLM <- glm(formula = pb ~ ., data = train_pa, family = "binomial")
-    GAM <- gam::gam(formula = paste0("pb", "~", paste0("s(", colnames(train_pa)[-1], ")", collapse = "+")) %>% as.formula, 
-                    family = "binomial", data = train_pa, warning = FALSE)
+    # GLM <- glm(formula = pb ~ ., data = train_pa, family = "binomial")
+    # GAM <- gam::gam(formula = paste0("pb", "~", paste0("s(", colnames(train_pa)[-1], ")", collapse = "+")) %>% as.formula, 
+    #                 family = "binomial", data = train_pa, warning = FALSE)
     
     # presence-absence - machine learning
     RFR <- randomForest::randomForest(formula = pb ~ ., data = train_pa)
@@ -150,9 +150,7 @@ for(i in occ$species %>% unique){
     MAX <- dismo::maxent(x = train_pb %>% dplyr::select(-pb), p = train_pb %>% dplyr::select(pb))
     
     # methods list
-    fit <- list(bioclim = BIO, domain = DOM, mahalanobis = MAH, 
-                glm = GLM, gam = GAM, randomforest = RFR, svm = SVM, 
-                maxent = MAX)
+    fit <- list(bioclim = BIO, domain = DOM, randomforest = RFR, svm = SVM, maxent = MAX)
     
     # ------------------------------------------------------------------------
     
@@ -160,7 +158,7 @@ for(i in occ$species %>% unique){
     for(a in seq(fit)){
       
       # information
-      print(paste("Model predict algorithm", fit[a] %>% names))
+      print(paste("Model predict method", fit[a] %>% names))
       
       # model predict
       model_predict <- raster::predict(var, fit[[a]], progress = "text")
@@ -187,19 +185,19 @@ for(i in occ$species %>% unique){
       # evaluation data
       eval_data <- tibble::tibble(species = i, 
                                   replica = r, 
-                                  algorithm = fit[a] %>% names, 
+                                  method = fit[a] %>% names, 
                                   thr_max_spec_sens = dismo::threshold(eval, "spec_sens"),
                                   tss_spec_sens = tss_spec_sens,
                                   auc = eval@auc, 
                                   file = paste0("enm_", i, "_", fit[a] %>% names, "_r", ifelse(r < 10, paste0("0", r), r)))
       
       # combine evaluation
-      eval_algorithm <- dplyr::bind_rows(eval_algorithm, eval_data)
+      eval_method <- dplyr::bind_rows(eval_method, eval_data)
       
     } # ends for "a"
     
     # combine evaluation
-    eval_species <- dplyr::bind_rows(eval_species, eval_algorithm)
+    eval_species <- dplyr::bind_rows(eval_species, eval_method)
     
   } # ends for "r"
   

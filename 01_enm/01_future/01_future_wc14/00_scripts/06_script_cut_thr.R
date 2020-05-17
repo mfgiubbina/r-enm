@@ -1,7 +1,7 @@
 #' ---
 #' title: threshold of ensembles
 #' authors: mauricio vancine
-#' date: 2020-05-05
+#' date: 2020-05-15
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -13,7 +13,7 @@ library(raster)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
 setwd(path)
 dir()
 
@@ -34,7 +34,7 @@ for(i in occ$species %>% unique){
   print(paste0("Binarizate weighted average to ", i))
   
   # directory
-  setwd(path); setwd("05_ensembles")
+  setwd(path); setwd("05_ensembles_uncertainties")
   
   # presence and pseudo-absence
   setwd(path); setwd(paste0("04_evaluation/", i))
@@ -42,7 +42,7 @@ for(i in occ$species %>% unique){
     dplyr::mutate(species = i)
   
   # import ensembles
-  setwd(path); setwd("05_ensembles")
+  setwd(path); setwd(paste0("05_ensembles_uncertainties/", i))
   ens <- dir(pattern = i) %>%
     grep("ensemble", ., value = TRUE) %>% 
     raster::stack()
@@ -56,7 +56,7 @@ for(i in occ$species %>% unique){
   # combine
   pa_sui <- cbind(pa, sui = sui)
   
-  # maximum tss and kappa
+  # maximum tss
   max_tss <- ecospat::ecospat.max.tss(Pred = pa_sui$sui, Sp.occ = pa_sui$pa)
   
   # thrs
@@ -76,7 +76,7 @@ for(i in occ$species %>% unique){
     max_tss = max_tss$max.TSS)
   
   # directory
-  setwd(path); setwd("06_ensembles_thrs")
+  setwd(path); setwd("06_ensembles_thrs"); dir.create(i); setwd(i)
   
   # area table
   table_thr_area <- NULL

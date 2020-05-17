@@ -1,7 +1,7 @@
 #' ---
 #' title: maps
 #' authors: mauricio vancine
-#' date: 2020-05-07
+#' date: 2020-05-15
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -16,7 +16,7 @@ library(tidyverse)
 library(RColorBrewer)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
 setwd(path)
 dir()
 
@@ -39,7 +39,7 @@ ggplot(sa) + geom_sf() + theme_bw()
 dir.create("08_maps")
 
 # plot
-for(i in occ$species %>% unique){
+for(i in occ$species %>% unique){}
   
   # information
   sp <- i %>% stringr::str_to_title() %>% stringr::str_replace("_", " ")
@@ -80,7 +80,7 @@ for(i in occ$species %>% unique){
   
   # continuum ensemble -------------------------------------------------------
   # directory
-  setwd(path); setwd("05_ensembles")
+  setwd(path); setwd("05_ensembles_uncertainties"); setwd(i)
   
   # import
   ens <- dir(pattern = i) %>%
@@ -88,10 +88,10 @@ for(i in occ$species %>% unique){
     raster::stack()
   
   # directory
-  setwd(path); setwd("08_maps")
+  setwd(path); setwd("07_maps")
   
   # map
-  for(j in ens %>% raster::nlayers() %>% seq){
+  for(j in ens %>% raster::nlayers() %>% seq){}
     
     # data
     da <- raster::rasterToPoints(ens[[j]]) %>% 

@@ -1,7 +1,7 @@
 #' ---
 #' title: maps
 #' authors: mauricio vancine
-#' date: 2020-05-09
+#' date: 2020-05-18
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -16,7 +16,7 @@ library(tidyverse)
 library(RColorBrewer)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
 setwd(path)
 dir()
 
@@ -26,17 +26,13 @@ occ <- readr::read_csv("02_occurrences/03_clean/occ_clean_taxa_date_bias_limit_s
 occ
 
 # limits
-li <- rnaturalearth::ne_countries(scale = "medium", country = "Brazil", returnclass = "sf")
+li <- rnaturalearth::ne_countries(scale = "small", continent = "South America", returnclass = "sf")
 li
 ggplot(li) + geom_sf() + theme_bw()
 
-sa <- rnaturalearth::ne_countries(scale = "medium", continent = c("South America"), returnclass = "sf")
-sa
-ggplot(sa) + geom_sf() + theme_bw()
-
 # maps --------------------------------------------------------------------
 # directory
-dir.create("07_maps")
+dir.create("09_maps")
 
 # plot
 for(i in occ$species %>% unique){
@@ -47,12 +43,11 @@ for(i in occ$species %>% unique){
   
   # occurrences -------------------------------------------------------------
   # directory
-  setwd(path); setwd("07_maps"); dir.create(i); setwd(i)
+  setwd(path); setwd("09_maps"); dir.create(i); setwd(i)
   
   # map
   map_occ <- ggplot() +
-    geom_sf(data = sa, fill = "gray90") +
-    geom_sf(data = li, fill = "gray75") +
+    geom_sf(data = li, fill = "gray90") +
     geom_point(data = occ %>% dplyr::filter(species == i), 
                aes(longitude, latitude, 
                    color = species %>% str_to_title() %>% sub("_", " ", .)), 
@@ -62,7 +57,7 @@ for(i in occ$species %>% unique){
     labs(x = "Longitude", y = "Latitude", color = "Occurrences") +
     annotation_scale(location = "br", width_hint = .3) +
     annotation_north_arrow(location = "tr", which_north = "true", 
-                           pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
+                           pad_x = unit(.3, "cm"), pad_y = unit(.3, "cm"),
                            style = north_arrow_fancy_orienteering) +
     theme_bw() +
     theme(legend.title = element_text(size = 12, face = "bold"),
@@ -72,15 +67,15 @@ for(i in occ$species %>% unique){
                                            linetype = "solid", 
                                            colour = "black"),
           axis.title = element_text(size = 12, face = "plain"),
-          legend.position = c(.83, .185))
+          legend.position = c(.75, .185))
   map_occ
   
   # export
-  ggsave(paste0("00_map_occ_", i, ".png"), map_occ, wi = 20, he = 25, un = "cm", dpi = 300)
+  ggsave(paste0("01_map_occ_", i, ".png"), map_occ, wi = 20, he = 25, un = "cm", dpi = 300)
   
   # continuum ensemble -------------------------------------------------------
   # directory
-  setwd(path); setwd("05_ensembles_uncertainties"); setwd(i)
+  setwd(path); setwd("05_ensembles"); setwd(i)
   
   # import
   ens <- dir(pattern = i) %>%
@@ -88,7 +83,7 @@ for(i in occ$species %>% unique){
     raster::raster()
   
   # directory
-  setwd(path); setwd("07_maps"); setwd(i)
+  setwd(path); setwd("09_maps"); setwd(i)
   
   # map
   # data
@@ -97,17 +92,16 @@ for(i in occ$species %>% unique){
     dplyr::rename(sui = names(ens))
   
   map_sui <- ggplot() +
-    geom_sf(data = sa, fill = "gray90") +
     geom_raster(data = da, aes(x, y, fill = sui)) +
     geom_sf(data = li, fill = NA, color = "gray30") +
     scale_color_manual(values = "black", guide = guide_legend(order = 1)) +
     scale_fill_gradientn(colours = wesanderson::wes_palette("Zissou1", n = 100, type = "continuous"),
                          limits = c(0, 1)) +
     coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
-    labs(x = "Longitude", y = "Latitude", fill = "Suitability", color = "Occurrences") +
+    labs(x = "Longitude", y = "Latitude", fill = "Suitability") +
     annotation_scale(location = "br", width_hint = .3) +
     annotation_north_arrow(location = "tr", which_north = "true", 
-                           pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
+                           pad_x = unit(.3, "cm"), pad_y = unit(.3, "cm"),
                            style = north_arrow_fancy_orienteering) +
     theme_bw() +
     theme(legend.title = element_text(size = 12, face = "bold"),
@@ -117,11 +111,11 @@ for(i in occ$species %>% unique){
                                            linetype = "solid", 
                                            colour = "black"),
           axis.title = element_text(size = 12, face = "plain"),
-          legend.position = c(.89, .17))
+          legend.position = c(.75, .17))
   map_sui
   
   # export
-  ggsave(paste0("01_map_", names(ens), ".png"), map_sui, wi = 20, he = 25, un = "cm", dpi = 300)
+  ggsave(paste0("02_map_", names(ens), ".png"), map_sui, wi = 20, he = 25, un = "cm", dpi = 300)
   
   
   # binary ensemble ---------------------------------------------------------
@@ -135,7 +129,7 @@ for(i in occ$species %>% unique){
     raster::stack()
   
   # directory
-  setwd(path); setwd("07_maps"); setwd(i)
+  setwd(path); setwd("09_maps"); setwd(i)
   
   for(j in ens %>% raster::nlayers() %>% seq){
     
@@ -144,23 +138,20 @@ for(i in occ$species %>% unique){
     da <- raster::rasterToPoints(ens[[j]]) %>% 
       tibble::as_tibble() %>%
       dplyr::rename(sui = names(ens[[j]])) %>% 
-      dplyr::mutate(sui = ifelse(sui == 0, "Ausência potencial (0)", "Presença potencial (1)"))
+      dplyr::mutate(sui = ifelse(sui == 0, "Potential absence (0)", "Potential presence (1)"))
     
     thr <- dplyr::last(stringr::str_split(names(ens[[j]]), "_", simplify = TRUE))
     
     map_thr <- ggplot() +
-      geom_sf(data = sa) +
       geom_raster(data = da, aes(x, y, fill = sui)) +
-      geom_sf(data = sa, fill = NA) +
-      geom_sf(data = li, fill = NA, color = "gray30") +
+      geom_sf(data = li, fill = NA) +
       scale_color_manual(values = "black", guide = guide_legend(order = 1)) +
-      scale_fill_manual(values = c("lightsteelblue", "#F21A00")) +
+      scale_fill_manual(values = c("#3B9AB2", "#F21A00")) +
       coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
-      labs(x = "Longitude", y = "Latitude", color = "Ocorrências",
-           fill = paste0("Adequabilidade (", thr, ")")) +
+      labs(x = "Longitude", y = "Latitude", fill = paste0("Suitability (", thr, ")")) +
       annotation_scale(location = "br", width_hint = .3) +
       annotation_north_arrow(location = "tr", which_north = "true", 
-                             pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
+                             pad_x = unit(.3, "cm"), pad_y = unit(.3, "cm"),
                              style = north_arrow_fancy_orienteering) +
       theme_bw() +
       theme(legend.title = element_text(size = 12, face = "bold"),
@@ -170,18 +161,18 @@ for(i in occ$species %>% unique){
                                              linetype = "solid", 
                                              colour = "black"),
             axis.title = element_text(size = 12, face = "plain"),
-            legend.position = c(.81, .15))
+            legend.position = c(.75, .15))
     map_thr
     
     # export
-    ggsave(paste0("02_map_", names(ens)[[j]], ".png"), map_thr, wi = 20, he = 25, un = "cm", dpi = 300)
+    ggsave(paste0("03_map_", names(ens)[[j]], ".png"), map_thr, wi = 20, he = 25, un = "cm", dpi = 300)
     
   }
   
   
   # uncertainties -----------------------------------------------------------
   # directory
-  setwd(path); setwd("05_ensembles_uncertainties"); setwd(i)
+  setwd(path); setwd("07_uncertainties"); setwd(i)
   
   # import
   unc <- dir(pattern = i) %>% 
@@ -190,7 +181,7 @@ for(i in occ$species %>% unique){
     raster::stack()
   
   # directory
-  setwd(path); setwd("07_maps"); setwd(i)
+  setwd(path); setwd("09_maps"); setwd(i)
   
   for(j in unc %>% raster::nlayers() %>% seq){
     
@@ -201,16 +192,24 @@ for(i in occ$species %>% unique){
       dplyr::rename(unc = names(unc[[j]]))
     
     map_unc <- ggplot() +
-      geom_sf(data = sa) +
-      geom_raster(data = da, aes(x, y, fill = unc * 100)) +
+      geom_raster(data = da, aes(x, y, fill = unc)) +
       geom_sf(data = li, fill = NA, color = "gray30") +
+      geom_label(aes(x = -45, y = -38), size = 5,
+                 label = paste0(names(unc[[j]]) %>% 
+                                  stringr::str_replace(i, "") %>% 
+                                  stringr::str_replace_all("[0-9]", "") %>%
+                                  stringr::str_replace_all("uncertainties", "") %>%
+                                  stringr::str_replace_all("_", " ") %>% 
+                                  stringr::str_to_title() %>% 
+                                  stringi::stri_trim())) +
       scale_color_manual(values = "black", guide = guide_legend(order = 1)) +
-      scale_fill_gradientn(colours = rev(RColorBrewer::brewer.pal(name = "Spectral", n = 9))) +
+      scale_fill_gradientn(colours = rev(RColorBrewer::brewer.pal(name = "Spectral", n = 9)), limits = c(0, 100)) +
       coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
-      labs(x = "Longitude", y = "Latitude", fill = "Uncertainties (%)", color = "Occurrences") +
+      labs(x = "Longitude", y = "Latitude", 
+           fill = "Uncertainties (%)") +
       annotation_scale(location = "br", width_hint = .3) +
       annotation_north_arrow(location = "tr", which_north = "true", 
-                             pad_x = unit(0, "cm"), pad_y = unit(.8, "cm"),
+                             pad_x = unit(.3, "cm"), pad_y = unit(.3, "cm"),
                              style = north_arrow_fancy_orienteering) +
       theme_bw() +
       theme(legend.title = element_text(size = 12, face = "bold"),
@@ -220,11 +219,11 @@ for(i in occ$species %>% unique){
                                              linetype = "solid", 
                                              colour = "black"),
             axis.title = element_text(size = 12, face = "plain"),
-            legend.position = c(.87, .16))
+            legend.position = c(.75, .16))
     map_unc
     
     # export
-    ggsave(paste0("03_map_", names(unc)[[j]], ".png"), map_unc, wi = 20, he = 25, un = "cm", dpi = 300)
+    ggsave(paste0("04_map_", names(unc)[[j]], ".png"), map_unc, wi = 20, he = 25, un = "cm", dpi = 300)
     
   }
   

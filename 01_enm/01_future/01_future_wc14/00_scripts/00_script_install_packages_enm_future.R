@@ -1,7 +1,7 @@
 #' ---
 #' title: install enm packages
 #' author: mauricio vancine
-#' date: 2020-05-11
+#' date: 2020-05-15
 #' ---
 
 # occurrences -------------------------------------------------------------
@@ -19,13 +19,12 @@ if(!require(taxize)) install.packages("taxize")
 
 # variables ------------------------------------------------------
 # manipulation and visualization
-if(!require(data.table)) install.packages("data.table")
 if(!require(ggsn)) install.packages("ggsn")
 if(!require(raster)) install.packages("raster")
 if(!require(rgdal)) install.packages("rgdal")
 if(!require(rgeos)) install.packages("rgeos")
+if(!require(RColorBrewer)) install.packages("RColorBrewer")
 if(!require(sf)) install.packages("sf")
-if(!require(viridis)) install.packages("viridis")
 
 # download
 if(!require(rnaturalearth)) install.packages("rnaturalearth")
@@ -34,20 +33,15 @@ if(!require(rnaturalearth)) install.packages("rnaturalearth")
 if(!require(corrr)) install.packages("corrr")
 if(!require(caret)) install.packages("caret")
 
-# selection - pca
-if(!require(factoextra)) install.packages("factoextra")
-if(!require(FactoMineR)) install.packages("FactoMineR")
-if(!require(RStoolbox)) install.packages("RStoolbox")
-
-# selection - factorial
-if(!require(psych)) install.packages("psych")
-
 # algorithms --------------------------------------------------------------
+# suppor analysis
+if(!require(ecospat)) install.packages("ecospat")
+
 # bioclim, domain, mahalanobis, and brt
 if(!require(dismo)) install.packages("dismo")
 
 # svm
-if(!require(kernlab)) install.packages("kernlab")
+if(!require(kernlab)) install.packages("e1071")
 
 # random forest
 if(!require(randomForest)) install.packages("randomForest")

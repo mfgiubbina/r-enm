@@ -1,7 +1,7 @@
 #' ---
 #' title: variables - download, adjust extention and resolution, and correlation
 #' author: mauricio vancine
-#' date: 2019-05-10
+#' date: 2019-05-17
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -19,20 +19,21 @@ library(tmap)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-raster::beginCluster(n = 4)
-raster::rasterOptions()
+raster::beginCluster(n = parallel::detectCores() - 1)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21/01_variables"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
 setwd(path)
-dir()
+dir.create("01_variables"); setwd("01_variables")
+path <- getwd()
+path
 
 # limits ------------------------------------------------------------------
 # limits
-li <- rnaturalearth::ne_countries(scale = 110, country = "Brazil", returnclass = "sf")
+li <- rnaturalearth::ne_countries(scale = 110, continent = "South America", returnclass = "sf")
 li
 
-li_ex <- rnaturalearth::ne_countries(scale = 110, country = "Brazil", returnclass = "sf") %>% 
+li_ex <- li %>% 
   sf::st_bbox() %>% 
   sf::st_as_sfc()
 li_ex
@@ -92,6 +93,7 @@ setwd(path); dir.create("02_processed"); setwd("02_processed")
 
 # adust extention and resolution
 var_li <- raster::crop(x = var, y = li) %>% 
+  raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
 var_li
 

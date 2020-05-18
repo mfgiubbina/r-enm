@@ -1,7 +1,7 @@
 #' ---
 #' title: variables - download, adjust extention and resolution, and correlation to future
 #' author: mauricio vancine
-#' date: 2020-05-11
+#' date: 2020-05-17
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -18,19 +18,21 @@ library(tmap)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-raster::beginCluster(n = 4)
+# raster::beginCluster(n = parallel::detectCores() - 1)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14/01_variables"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
 setwd(path)
-dir()
+dir.create("01_variables"); setwd("01_variables")
+path <- getwd()
+path
 
 # limits ------------------------------------------------------------------
 # limits
-li <- rnaturalearth::ne_countries(scale = 110, country = "Brazil", returnclass = "sf")
+li <- rnaturalearth::ne_countries(scale = 110, continent = "South America", returnclass = "sf")
 li
 
-li_ex <- rnaturalearth::ne_countries(scale = 110, country = "Brazil", returnclass = "sf") %>% 
+li_ex <- li %>% 
   sf::st_bbox() %>% 
   sf::st_as_sfc()
 li_ex
@@ -109,16 +111,16 @@ setwd(path); dir.create("02_processed"); setwd("02_processed")
 
 # adust extention and resolution - present
 var_p_li <- raster::crop(x = var_p, y = li) %>% 
+  raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
 var_p_li
-
 plot(var_p_li[[1]])
 
 # adust extention to mask and resolution - present
 var_f_li <- raster::crop(x = var_f, y = li) %>% 
+  raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
 var_f_li
-
 plot(var_f_li[[1]])
 
 # export present

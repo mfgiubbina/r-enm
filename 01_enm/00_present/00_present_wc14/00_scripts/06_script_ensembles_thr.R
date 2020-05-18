@@ -1,7 +1,7 @@
 #' ---
 #' title: threshold of ensembles
 #' authors: mauricio vancine
-#' date: 2020-05-15
+#' date: 2020-05-18
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -13,7 +13,7 @@ library(raster)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
 setwd(path)
 dir()
 
@@ -34,29 +34,29 @@ for(i in occ$species %>% unique){
   print(paste0("Binarizate weighted average to ", i))
   
   # directory
-  setwd(path); setwd("05_ensembles_uncertainties")
+  setwd(path); setwd("05_ensembles")
   
   # presence and pseudo-absence
   setwd(path); setwd(paste0("04_evaluation/", i))
-  pa <- purrr::map_dfr(dir(pattern = "pa_|pr_"), readr::read_csv) %>% 
+  pa <- purrr::map_dfr(dir(pattern = "pa_|pr_"), col_types = cols(), readr::read_csv) %>% 
     dplyr::mutate(species = i)
   
   # import ensembles
-  setwd(path); setwd(paste0("05_ensembles_uncertainties/", i))
-  ens <- dir(pattern = i) %>%
+  setwd(path); setwd(paste0("05_ensembles/", i))
+  ens <- dir(pattern = paste0(i, ".tif$")) %>%
     grep("ensemble", ., value = TRUE) %>% 
-    raster::stack()
+    raster::raster()
   
   # extract
   sui <- pa %>% 
     dplyr::filter(species == i) %>% 
     dplyr::select(longitude, latitude) %>% 
-    raster::extract(ens[[grep("present", names(ens))]], .)
+    raster::extract(ens, .)
   
   # combine
   pa_sui <- cbind(pa, sui = sui)
   
-  # maximum tss
+  # maximum tss and kappa
   max_tss <- ecospat::ecospat.max.tss(Pred = pa_sui$sui, Sp.occ = pa_sui$pa)
   
   # thrs
@@ -65,7 +65,7 @@ for(i in occ$species %>% unique){
     p10 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .1), 2) %>% as.numeric,
     p20 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .2), 2) %>% as.numeric,
     p30 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .3), 2) %>% as.numeric,
-    max_tss = max_tss$max.threshold)
+    maxtss = max_tss$max.threshold)
   
   # tss
   tss <- list(
@@ -73,7 +73,7 @@ for(i in occ$species %>% unique){
     p10 = max_tss$table[max_tss$table$threshold == thrs$p10, 2],
     p20 = max_tss$table[max_tss$table$threshold == thrs$p20, 2],
     p30 = max_tss$table[max_tss$table$threshold == thrs$p30, 2],
-    max_tss = max_tss$max.TSS)
+    maxtss = max_tss$max.TSS)
   
   # directory
   setwd(path); setwd("06_ensembles_thrs"); dir.create(i); setwd(i)
@@ -91,15 +91,12 @@ for(i in occ$species %>% unique){
     ens_t <- ens >= thrs[[j]]
     
     # area
-    for(k in 1:nlayers(ens_t)){
-    
-    area <- tapply(raster::area(ens_t[[k]]), raster::values(ens_t[[k]]), sum)
+    area <- tapply(raster::area(ens_t), raster::values(ens_t), sum)
     area
     
     # table
     table_thr_area <- rbind(table_thr_area, 
                             tibble::tibble(species = i,
-                                           scenario = sub(paste0(i, "_"), "", sub("ensemble_weighted_average_", "", names(ens_t[[k]]))),
                                            threshold = names(thrs)[j],
                                            threshold_val = thrs[[j]] %>% round(3),
                                            tss = tss[[j]]%>% round(3),
@@ -110,19 +107,16 @@ for(i in occ$species %>% unique){
                                            absence_por = round(area[1]/sum(area)*100, 2)))
     
     # ens
-    raster::writeRaster(x = ens_t[[k]], 
-                        filename = paste0(names(ens_t[[k]]), "_thr_", names(thrs)[j]), 
+    raster::writeRaster(x = ens_t, 
+                        filename = paste0(names(ens), "_thr_", names(thrs)[j]), 
                         format = "GTiff", 
                         options = c("COMPRESS=DEFLATE"), 
                         overwrite = TRUE)
-   
-    }
-     
-  
-    }
+    
+  }
   
   # export area
-  readr::write_csv(table_thr_area, paste0("table_areas_thr_", i, ".csv"))
+  readr::write_csv(table_thr_area, paste0("threshold_areas_", i, ".csv"))
   
 }
 

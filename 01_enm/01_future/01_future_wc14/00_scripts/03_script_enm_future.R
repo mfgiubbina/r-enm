@@ -1,7 +1,7 @@
 #' ---
 #' title: enm - multiple algorithm
 #' authors: matheus lima-ribeiro, mauricio vancine
-#' date: 2020-05-15
+#' date: 2020-05-17
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -23,7 +23,7 @@ library(tidyverse)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-raster::beginCluster(n = parallel::detectCores() - 1)
+# raster::beginCluster(n = parallel::detectCores() - 1)
 
 # maxent
 if(file.exists(paste0(system.file(package = "dismo"), "/java/maxent.jar"))){
@@ -149,12 +149,12 @@ for(i in occ$species %>% unique){
     
     # presence-only - distance-based
     DOM <- dismo::domain(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
-    MAH <- dismo::mahal(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
+    # MAH <- dismo::mahal(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
     
     # presence-absence - statistics
-    GLM <- glm(formula = pb ~ ., data = train_pa, family = "binomial")
-    GAM <- gam::gam(formula = paste0("pb", "~", paste0("s(", colnames(train_pa)[-1], ")", collapse = "+")) %>% as.formula, 
-                    family = "binomial", data = train_pa, warning = FALSE)
+    # GLM <- glm(formula = pb ~ ., data = train_pa, family = "binomial")
+    # GAM <- gam::gam(formula = paste0("pb", "~", paste0("s(", colnames(train_pa)[-1], ")", collapse = "+")) %>% as.formula, 
+    #                 family = "binomial", data = train_pa, warning = FALSE)
     
     # presence-absence - machine learning
     RFR <- randomForest::randomForest(formula = pb ~ ., data = train_pa)
@@ -165,9 +165,15 @@ for(i in occ$species %>% unique){
     MAX <- dismo::maxent(x = train_pb %>% dplyr::select(-pb), p = train_pb %>% dplyr::select(pb))
     
     # methods list
-    fit <- list(bioclim = BIO, domain = DOM, mahalanobis = MAH, 
-                glm = GLM, gam = GAM, randomforest = RFR, svm = SVM, 
+    fit <- list(bioclim = BIO, 
+                domain = DOM, 
+                # mahalanobis = MAH, 
+                # glm = GLM, 
+                # gam = GAM, 
+                randomforest = RFR, 
+                svm = SVM, 
                 maxent = MAX)
+    
     # -------------------------------------------------------------------------
 
     # predict

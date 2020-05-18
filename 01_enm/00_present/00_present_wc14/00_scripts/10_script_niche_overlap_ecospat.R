@@ -1,7 +1,7 @@
 #' ---
 #' title: niche overlap ecospat
 #' author: mauricio vancine
-#' date: 2020-05-13
+#' date: 2020-05-17
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -14,7 +14,7 @@ library(parallel)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
 setwd(path)
 dir()
 
@@ -42,7 +42,7 @@ setwd(path); setwd("01_variables/04_processed_correlation"); dir()
 var <- dir(pattern = "tif$") %>% 
   raster::stack() %>% 
   raster::brick()
-names(var) <- stringr::str_replace(names(var), "var_wc21_55km_", "")
+names(var) <- stringr::str_replace(names(var), "var_wc14_55km_", "")
 names(var)
 var
 
@@ -111,7 +111,7 @@ ecospat::ecospat.plot.niche.dyn(z1, z2, quant = .25, interest = 1,
 
 # equivalency test --------------------------------------------------------
 # niche equivalency test
-eq <- ecospat::ecospat.niche.equivalency.test(z1, z2, rep = 100, alternative = "greater", 
+eq <- ecospat::ecospat.niche.equivalency.test(z1, z2, rep = 100, alternative = "lower", 
                                               ncores = parallel::detectCores() - 1)
 eq
 
@@ -125,11 +125,11 @@ ecospat::ecospat.plot.overlap.test(eq, type = "I", title = "Equivalency")
 
 # similarity test ----------------------------------------------------------
 # niche similarity test
-si_sp1_sp2 <- ecospat::ecospat.niche.similarity.test(z1, z2, rep = 100, alternative = "greater",
+si_sp1_sp2 <- ecospat::ecospat.niche.similarity.test(z1, z2, rep = 100, alternative = "lower",
                                                      rand.type = 1, ncores = parallel::detectCores() - 1)
 si_sp1_sp2
 
-si_sp2_sp1 <- ecospat::ecospat.niche.similarity.test(z2, z1, rep = 100, alternative = "greater",
+si_sp2_sp1 <- ecospat::ecospat.niche.similarity.test(z2, z1, rep = 100, alternative = "lower",
                                                      rand.type = 1, ncores = parallel::detectCores() - 1)
 si_sp2_sp1
 
@@ -186,6 +186,7 @@ tibble::tibble(
         mean(si_sp1_sp2$sim$I), sd(si_sp1_sp2$sim$I), si_sp1_sp2$p.I,
         mean(si_sp2_sp1$sim$I), sd(si_sp2_sp1$sim$I), si_sp2_sp1$p.I)
 ) %>% 
+  dplyr::mutate(d = round(d, 2), i = round(i, 2)) %>% 
   readr::write_csv("overlap_test.csv")
 
 # figure

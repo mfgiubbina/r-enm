@@ -1,7 +1,7 @@
 #' ---
 #' title: sdm - multiple method
 #' authors: matheus lima-ribeiro, mauricio vancine
-#' date: 2020-05-09
+#' date: 2020-05-17
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -55,6 +55,8 @@ names(var)
 var
 
 raster::plot(var)
+raster::plot(var$bio02)
+points(occ$longitude, occ$latitude, pch = 20, col = as.factor(occ$species))
 
 # enms --------------------------------------------------------------------
 # diretory
@@ -150,7 +152,14 @@ for(i in occ$species %>% unique){
     MAX <- dismo::maxent(x = train_pb %>% dplyr::select(-pb), p = train_pb %>% dplyr::select(pb))
     
     # methods list
-    fit <- list(bioclim = BIO, domain = DOM, randomforest = RFR, svm = SVM, maxent = MAX)
+    fit <- list(bioclim = BIO, 
+                domain = DOM, 
+                # mahalanobis = MAH, 
+                # glm = GLM, 
+                # gam = GAM, 
+                randomforest = RFR, 
+                svm = SVM, 
+                maxent = MAX)
     
     # ------------------------------------------------------------------------
     

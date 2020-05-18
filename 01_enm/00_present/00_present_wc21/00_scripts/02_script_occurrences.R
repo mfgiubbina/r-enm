@@ -1,7 +1,7 @@
 #' ---
 #' title: occ - download and clean
 #' author: mauricio vancine
-#' date: 2019-05-05
+#' date: 2019-05-17
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -18,7 +18,7 @@ library(sf)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21/02_occurrences"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14/02_occurrences"
 setwd(path)
 dir()
 
@@ -178,7 +178,7 @@ occ_data_vector <- occ_data %>%
   tidyr::drop_na(longitude, latitude) %>% 
   sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
   
-tm_shape(li, bbox = sf::st_bbox(occ_data_vector)) +
+tm_shape(li, bbox = occ_data_vector) +
   tm_polygons() +
   tm_shape(occ_data_vector) +
   tm_dots(size = .2, shape = 21, col = "species_search",  
@@ -246,7 +246,7 @@ occ_data_taxa_vector <- occ_data_taxa %>%
   tidyr::drop_na(longitude, latitude) %>% 
   sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
-tm_shape(li, bbox = sf::st_bbox(occ_data_taxa_vector)) +
+tm_shape(li, bbox = occ_data_taxa_vector) +
   tm_polygons() +
   tm_shape(occ_data_taxa_vector) +
   tm_dots(size = .2, shape = 21, col = "species_search",  
@@ -289,7 +289,7 @@ occ_data_taxa_date_vector <- occ_data_taxa_date %>%
   tidyr::drop_na(longitude, latitude) %>% 
   sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
-tm_shape(li, bbox = sf::st_bbox(occ_data_taxa_date_vector)) +
+tm_shape(li, bbox = occ_data_taxa_date_vector) +
   tm_polygons() +
   tm_shape(occ_data_taxa_date_vector) +
   tm_dots(size = .2, shape = 21, col = "species_search",  
@@ -344,7 +344,7 @@ occ_data_taxa_date_bias_vector <- occ_data_taxa_date_bias %>%
   tidyr::drop_na(longitude, latitude) %>% 
   sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
-tm_shape(li, bbox = sf::st_bbox(occ_data_taxa_date_bias_vector)) +
+tm_shape(li, bbox = occ_data_taxa_date_bias_vector) +
   tm_polygons() +
   tm_shape(occ_data_taxa_date_bias_vector) +
   tm_dots(size = .2, shape = 21, col = "species_search",  
@@ -360,7 +360,7 @@ occ_data_taxa_date_bias_vector <- occ_data_taxa_date_bias %>%
 occ_data_taxa_date_bias_vector
 
 # extent
-li_ex <- rnaturalearth::ne_countries(scale = 110, country = "Brazil", returnclass = "sf") %>% 
+li_ex <- rnaturalearth::ne_countries(scale = 110, continent = "South America", returnclass = "sf") %>% 
   sf::st_bbox() %>% 
   sf::st_as_sfc()
 li_ex %>% tm_shape() + tm_polygons() + tm_graticules(lines = FALSE)
@@ -370,7 +370,7 @@ occ_data_taxa_date_bias_limit <- sf::st_crop(occ_data_taxa_date_bias_vector, li_
 occ_data_taxa_date_bias_limit
 
 # map
-tm_shape(li, bbox = sf::st_bbox(li_ex)) +
+tm_shape(li, bbox = li_ex) +
   tm_polygons() +
   tm_shape(li_ex) +
   tm_borders(col = "black") +
@@ -406,10 +406,8 @@ occ_data_taxa_date_bias_limit_spatial_vector <- occ_data_taxa_date_bias_limit_sp
   sf::st_as_sf(coords = c("lon", "lat"), crs = 4326)
 occ_data_taxa_date_bias_limit_spatial_vector
 
-tm_shape(li, bbox = sf::st_bbox(li_ex)) +
+tm_shape(li, bbox = li_ex) +
   tm_polygons() +
-  tm_shape(li_ex) +
-  tm_borders(col = "black") +
   tm_shape(occ_data_taxa_date_bias_limit_spatial_vector) +
   tm_dots(size = .2, shape = 21, col = "species_search",  
           palette = "Set1", title = "Species") +

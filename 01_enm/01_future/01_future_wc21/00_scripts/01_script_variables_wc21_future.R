@@ -11,7 +11,7 @@ rm(list = ls())
 # packages
 library(geobr)
 library(GGally)
-library(terra)
+library(raster)
 library(rvest)
 library(sf)
 library(tidyverse)

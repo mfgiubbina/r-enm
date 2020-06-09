@@ -84,7 +84,7 @@ for(i in eva$species %>% unique){
     # information
     print(j)
     
-    # metoritm selection
+    # method selection
     enm_i_r_met_val <- enm_i_r[[grep(j, names(enm_i_r))]] %>% 
       raster::values()
     

@@ -9,13 +9,8 @@
 rm(list = ls())
 
 # packages
-library(raster)
 library(tidyverse)
-library(vegan)
 library(wesanderson)
-
-# raster options
-raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
 
 # directory
 path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"

@@ -1,10 +1,10 @@
 #' ---
 #' title: occ - download and clean
 #' author: mauricio vancine
-#' date: 2019-05-17
+#' date: 2019-06-16
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -13,15 +13,17 @@ library(CoordinateCleaner)
 library(ecospat)
 library(lubridate)
 library(rnaturalearth)
-library(sampbias)
 library(sf)
 library(tidyverse)
 library(tmap)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14/02_occurrences"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_ecoclimate"
 setwd(path)
-dir()
+dir.create("01_occurrences"); setwd("01_occurrences")
+path <- getwd()
+path
+
 
 # import data -------------------------------------------------------------
 # data
@@ -34,7 +36,7 @@ sp_list <- readr::read_csv("00_species_list/00_species_list.csv") %>%
   dplyr::arrange(species) %>% 
   dplyr::pull()
 sp_list
-  
+
 # bases for download
 db <- c("gbif", "bison", "inat", "ebird", "ecoengine", "vertnet", "idigbio", "obis", "ala")
 db
@@ -171,16 +173,16 @@ occ_data <- purrr::map_dfr(dir(pattern = ".csv"), readr::read_csv)
 occ_data
 
 # directory
-setwd(path); dir.create("02_integrated")
+setwd(path); dir.create("02_integrated"); setwd("02_integrated")
 
 # export
-readr::write_csv(occ_data, paste0("02_integrated/occ_integrated_", lubridate::today(), ".csv"))
+readr::write_csv(occ_data, paste0("occ_integrated_", lubridate::today(), ".csv"))
 
 # map
 occ_data_vector <- occ_data %>% 
   tidyr::drop_na(longitude, latitude) %>% 
   sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-  
+
 tm_shape(li, bbox = occ_data_vector) +
   tm_polygons() +
   tm_shape(occ_data_vector) +
@@ -199,29 +201,29 @@ gnr_taxa <- NULL
 gnr_total <- NULL
 
 for(i in sp_list){
-
+  
   # gnr names
   gnr <- taxize::gnr_resolve(i)
-
+  
   # combine
   gnr_total <- rbind(gnr_total, gnr)
   
   # adjust names
   gnr_taxa_i <- gnr %>% 
-  dplyr::mutate(species = i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_")) %>% 
-  dplyr::select(species, matched_name) %>%
-  dplyr::bind_rows(tibble::tibble(species = i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_"),
-                                  matched_name = c(i, 
-                                                   i %>% stringr::str_to_title(),
-                                                   i %>% stringr::str_to_lower(),
-                                                   i %>% stringr::str_to_upper()))) %>% 
-  dplyr::distinct() %>% 
-  dplyr::arrange(matched_name)
-
+    dplyr::mutate(species = i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_")) %>% 
+    dplyr::select(species, matched_name) %>%
+    dplyr::bind_rows(tibble::tibble(species = i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_"),
+                                    matched_name = c(i, 
+                                                     i %>% stringr::str_to_title(),
+                                                     i %>% stringr::str_to_lower(),
+                                                     i %>% stringr::str_to_upper()))) %>% 
+    dplyr::distinct() %>% 
+    dplyr::arrange(matched_name)
+  
   # combine
   gnr_taxa <- rbind(gnr_taxa, gnr_taxa_i)
-
-  }
+  
+}
 
 # confer
 gnr_taxa
@@ -380,7 +382,7 @@ tm_shape(li, bbox = li_sa) +
   tm_graticules(lines = FALSE) +
   tm_layout(legend.text.fontface = "italic")
 
-# preparate
+# prepare
 occ_data_taxa_date_bias_limit <- occ_data_taxa_date_bias_limit %>%
   sf::st_drop_geometry() %>% 
   as.data.frame
@@ -422,32 +424,41 @@ occ_data_taxa_date_bias %>% dplyr::count(species)
 occ_data_taxa_date_bias_limit %>% dplyr::count(species)
 occ_data_taxa_date_bias_limit_spatial %>% dplyr::count(species)
 
+# summary total
+sp_list_ <- sp_list %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_")
+sp_list_
+
 occ_filter_total <- occ_data %>% 
-  dplyr::filter(species_search %in% c(sp_list)) %>% 
-  dplyr::mutate(species = species_search %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_")) %>%
-  dplyr::count(species, base, name = "total") %>% 
-  tidyr::drop_na()
+  dplyr::mutate(species = name %>% 
+                  stringr::str_to_lower() %>% 
+                  stringr::str_replace(" ", "_") %>% 
+                  stringr::str_split(" ", simplify = TRUE) %>% 
+                  tibble::as_tibble() %>% 
+                  dplyr::select(1) %>% 
+                  dplyr::pull()) %>%
+  dplyr::filter(species %in% sp_list_) %>% 
+  dplyr::count(species, base, name = "total")
 occ_filter_total
 
 occ_filter_taxa <- occ_data_taxa %>% 
-  dplyr::count(species, base) %>% 
-  tidyr::drop_na()
+  dplyr::count(species, base, name = "taxa")
 occ_filter_taxa
 
 occ_filter_taxa_date <- occ_data_taxa_date %>% 
-  dplyr::count(species, base) %>% 
+  dplyr::count(species, base, name = "date") %>% 
   tidyr::drop_na()
 occ_filter_taxa_date
 
 occ_filter_taxa_date_spatial <- occ_data_taxa_date_bias_limit_spatial %>% 
-  dplyr::count(species, base)
+  dplyr::count(species, base, name = "spatial")
 occ_filter_taxa_date_spatial
 
-occ_filter <- tibble::tibble(
-  occ_filter_total,
-  taxa = occ_filter_taxa$n,
-  date = occ_filter_taxa_date$n,
-  spatial = occ_filter_taxa_date_spatial$n)
+occ_filter <- occ_filter_total %>% 
+  dplyr::left_join(occ_filter_taxa, by = c("species", "base")) %>% 
+  dplyr::left_join(occ_filter_taxa_date, by = c("species", "base")) %>% 
+  dplyr::left_join(occ_filter_taxa_date_spatial, by = c("species", "base")) %>% 
+  tidyr::drop_na(base) %>% 
+  dplyr::mutate_all(~replace_na(., 0))
 occ_filter
 
 # export ------------------------------------------------------------------

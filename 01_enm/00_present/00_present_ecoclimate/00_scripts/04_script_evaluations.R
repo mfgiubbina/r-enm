@@ -1,7 +1,7 @@
 #' ---
-#' title: evaluation
+#' title: ensemble - weighted average and uncertainties - hierarchical anova
 #' authors: mauricio vancine
-#' date: 2020-06-16
+#' date: 2020-05-18
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -13,7 +13,7 @@ library(tidyverse)
 library(wesanderson)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
 setwd(path)
 dir()
 

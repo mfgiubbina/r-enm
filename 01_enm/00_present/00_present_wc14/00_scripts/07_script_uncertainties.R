@@ -1,10 +1,10 @@
 #' ---
-#' title: ensemble - weighted average and uncertainties - hierarchical anova
+#' title: ensemble - uncertainties
 #' authors: mauricio vancine
-#' date: 2020-05-18
+#' date: 2020-06-16
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -12,47 +12,107 @@ rm(list = ls())
 library(raster)
 library(tidyverse)
 library(vegan)
-library(wesanderson)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
 # raster::beginCluster(n = parallel::detectCores() - 1)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
 setwd(path)
 dir()
 
-# weighted average ensemble  ----------------------------------------------
-# directories
-setwd("05_ensembles")
+# evaluations -------------------------------------------------------------
+# directory
+setwd("04_evaluation")
 
-# species list
-sp <- dir()
-sp
+# import evaluations
+eva <- dir(pattern = "00_evaluation_", recursive = TRUE) %>% 
+  purrr::map_dfr(., col_types = cols(), readr::read_csv)
+eva
 
 # uncertainties -----------------------------------------------------------
-for(i in sp){
+# tss
+tss_limit <- .5
 
+# directory
+setwd(path); dir.create("07_uncertainties")
+
+# ensemble
+for(i in eva$species %>% unique){
+  
   # information
   print(paste("Uncertainties to", i))
   
+  # selection
+  eva_i <- eva %>% 
+    dplyr::filter(species == i, 
+                  tss_spec_sens >= tss_limit)
+  
+  # tss
+  tss_i <- eva_i %>% 
+    dplyr::select(tss_spec_sens) %>% 
+    dplyr::mutate(tss = (tss_spec_sens) ^ 2) %>% 
+    dplyr::pull()
+  
+  # list files
+  enm_i_f <- eva_i %>% 
+    dplyr::select(file) %>% 
+    dplyr::pull()
+  
   # directory
-  setwd(i)
+  setwd(path); setwd(paste0("03_enm/", i))
+  
+  # import
+  enm_i_r <- dir(pattern = ".tif$") %>% 
+    stringr::str_subset(paste(enm_i_f, collapse = "|")) %>% 
+    raster::stack()
+  
+  # inf
+  met <- stringr::str_split_fixed(names(enm_i_r), "_", 9)[, 4] %>% 
+    unique
+  
+  # standardization ---------------------------------------------------------
+  print("Standardization can take a looong time...")
+  
+  enm_i_st <- NULL
+  
+  for(j in met){
+    
+    # information
+    print(j)
+    
+    # method selection
+    enm_i_r_met_val <- enm_i_r[[grep(j, names(enm_i_r))]] %>% 
+      raster::values()
+    
+    # standardization
+    enm_i_met_st <- vegan::decostand(enm_i_r_met_val, "range", na.rm = TRUE)
+    enm_i_st <- cbind(enm_i_st, enm_i_met_st)
+    
+  }
+  
+  
+  # uncertainties -----------------------------------------------------------
+  # information
+  print(paste("Uncertainties to", i))
   
   # suitability
-  sui <- dir() %>% 
-    raster::raster()
+  sui <- enm_i_st
   
   # factors
   met_fac <- stringr::str_split_fixed(colnames(enm_i_st), "_", 9)[, 4]
   
-  # hierarchical anova
+  # anova
   sui_ms <- NULL
+  
+  pb <- progress_bar$new(format = "anova: [:bar] (:percent)",
+                         total = nrow(sui))
   
   for(p in 1:nrow(sui)){
     
-    print(paste0(round(p/nrow(sui)*100, 2), "%"))
+    pb$tick()
+    
     sui_p <- as.numeric(sui[p, ])
     
     if(any(is.na(sui_p))){
@@ -84,6 +144,7 @@ for(i in sp){
     
     unc_r[] <- sui_ms_prop[, r]
     unc <- raster::stack(unc, unc_r)
+    
   }
   
   # names

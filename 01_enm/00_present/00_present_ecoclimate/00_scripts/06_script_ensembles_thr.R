@@ -1,7 +1,7 @@
 #' ---
 #' title: threshold of ensembles
 #' authors: mauricio vancine
-#' date: 2020-05-09
+#' date: 2020-05-18
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -13,7 +13,7 @@ library(raster)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
 setwd(path)
 dir()
 
@@ -34,7 +34,7 @@ for(i in occ$species %>% unique){
   print(paste0("Binarizate weighted average to ", i))
   
   # directory
-  setwd(path); setwd("05_ensembles_uncertainties")
+  setwd(path); setwd("05_ensembles")
   
   # presence and pseudo-absence
   setwd(path); setwd(paste0("04_evaluation/", i))
@@ -42,7 +42,7 @@ for(i in occ$species %>% unique){
     dplyr::mutate(species = i)
   
   # import ensembles
-  setwd(path); setwd(paste0("05_ensembles_uncertainties/", i))
+  setwd(path); setwd(paste0("05_ensembles/", i))
   ens <- dir(pattern = paste0(i, ".tif$")) %>%
     grep("ensemble", ., value = TRUE) %>% 
     raster::raster()
@@ -65,7 +65,7 @@ for(i in occ$species %>% unique){
     p10 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .1), 2) %>% as.numeric,
     p20 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .2), 2) %>% as.numeric,
     p30 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .3), 2) %>% as.numeric,
-    max_tss = max_tss$max.threshold)
+    maxtss = max_tss$max.threshold)
   
   # tss
   tss <- list(
@@ -73,7 +73,7 @@ for(i in occ$species %>% unique){
     p10 = max_tss$table[max_tss$table$threshold == thrs$p10, 2],
     p20 = max_tss$table[max_tss$table$threshold == thrs$p20, 2],
     p30 = max_tss$table[max_tss$table$threshold == thrs$p30, 2],
-    max_tss = max_tss$max.TSS)
+    maxtss = max_tss$max.TSS)
   
   # directory
   setwd(path); setwd("06_ensembles_thrs"); dir.create(i); setwd(i)
@@ -116,7 +116,7 @@ for(i in occ$species %>% unique){
   }
   
   # export area
-  readr::write_csv(table_thr_area, paste0("00_thresholds_areas_", i, ".csv"))
+  readr::write_csv(table_thr_area, paste0("threshold_areas_", i, ".csv"))
   
 }
 

@@ -1,10 +1,10 @@
 #' ---
 #' title: maps
 #' authors: mauricio vancine
-#' date: 2020-05-18
+#' date: 2020-06-16
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -16,13 +16,13 @@ library(tidyverse)
 library(RColorBrewer)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
 setwd(path)
 dir()
 
 # import data -------------------------------------------------------------
 # occ
-occ <- readr::read_csv("02_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
+occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
 # limits

@@ -1,10 +1,10 @@
 #' ---
 #' title: ensemble - weighted average and uncertainties - hierarchical anova
 #' authors: mauricio vancine
-#' date: 2020-06-16
+#' date: 2020-05-18
 #' ---
 
-# prepare r -------------------------------------------------------------
+# preparate r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -12,13 +12,14 @@ rm(list = ls())
 library(raster)
 library(tidyverse)
 library(vegan)
+library(wesanderson)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
 # raster::beginCluster(n = parallel::detectCores() - 1)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
 setwd(path)
 dir()
 
@@ -35,7 +36,7 @@ eva
 # tss
 tss_limit <- .5
 
-# directory
+# directories
 setwd(path); dir.create("05_ensembles")
 
 # ensemble
@@ -83,7 +84,7 @@ for(i in eva$species %>% unique){
     # information
     print(j)
     
-    # method selection
+    # metoritm selection
     enm_i_r_met_val <- enm_i_r[[grep(j, names(enm_i_r))]] %>% 
       raster::values()
     

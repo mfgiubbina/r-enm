@@ -13,7 +13,7 @@ library(ecospat)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
 setwd(path)
 dir()
 

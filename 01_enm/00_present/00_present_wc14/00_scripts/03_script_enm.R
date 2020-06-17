@@ -1,10 +1,10 @@
 #' ---
 #' title: sdm - multiple method
 #' authors: matheus lima-ribeiro, mauricio vancine
-#' date: 2020-05-17
+#' date: 2020-06-16
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -32,7 +32,7 @@ if(file.exists(paste0(system.file(package = "dismo"), "/java/maxent.jar"))){
   print(paste0("File maxent.jar not found! Downloading in ", paste0(system.file(package = "dismo"), "/java")))
   setwd(paste0(system.file(package = "dismo"), "/java"))
   download.file("https://biodiversityinformatics.amnh.org/open_source/maxent/maxent.php?op=download",
-                "maxent.zip")
+                "maxent.zip", mode = "wb")
   unzip("maxent.zip")}
 
 # directory
@@ -42,11 +42,11 @@ dir()
 
 # import data -------------------------------------------------------------
 # occ
-occ <- readr::read_csv("02_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
+occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
 # var
-setwd(path); setwd("01_variables/04_processed_correlation"); dir()
+setwd(path); setwd("02_variables/04_processed_correlation"); dir()
 var <- dir(pattern = "tif$") %>% 
   raster::stack() %>% 
   raster::brick()

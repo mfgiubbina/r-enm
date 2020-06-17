@@ -1,10 +1,10 @@
 #' ---
-#' title: variables - download, adjust extention and resolution, and correlation
+#' title: variables - download, adjust extension and resolution, and correlation
 #' author: mauricio vancine
-#' date: 2019-05-17
+#' date: 2019-06-16
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -24,7 +24,7 @@ raster::beginCluster(n = parallel::detectCores() - 1)
 # directory
 path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
 setwd(path)
-dir.create("01_variables"); setwd("01_variables")
+dir.create("02_variables"); setwd("02_variables")
 path <- getwd()
 path
 

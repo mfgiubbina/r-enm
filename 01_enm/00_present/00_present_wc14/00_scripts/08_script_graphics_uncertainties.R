@@ -1,10 +1,10 @@
 #' ---
 #' title: graphics
 #' authors: mauricio vancine
-#' date: 2020-05-18
+#' date: 2020-06-16
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -13,7 +13,7 @@ library(raster)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
 setwd(path)
 dir()
 

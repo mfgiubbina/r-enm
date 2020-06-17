@@ -1,10 +1,10 @@
 #' ---
-#' title: variables - download, adjust extention and resolution, and correlation
+#' title: variables - download, adjust extension and resolution, and correlation
 #' author: mauricio vancine
 #' date: 2019-05-13
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -22,16 +22,14 @@ raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
 raster::beginCluster(n = parallel::detectCores() - 1)
 
 # sources
-source("F:/mauricio/r-enm/01_enm/00_present/00_present_ecoclimate/00_scripts/src/function_variable_download_ecoclimate.R")
+source("/home/mude/data/github/r-enm/01_enm/00_present/00_present_ecoclimate/00_scripts/src/function_variable_download_ecoclimate.R")
 
 # directory
-path <- "F:/mauricio/r-enm/01_enm/00_present/00_present_ecoclimate"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_ecoclimate"
 setwd(path)
-dir.create("01_variables")
-
-path <- paste0(path, "/01_variables")
-setwd(path)
-getwd()
+dir.create("02_variables"); setwd("02_variables")
+path <- getwd()
+path
 
 # limits ------------------------------------------------------------------
 # limits
@@ -64,13 +62,12 @@ getwd()
 
 # download
 var_download_ecoclimate(baseline = "modern",
-                        scenario = c("present"), 
+                        scenario = "present", 
                         variable = "bioclimate", 
-                        aogcm = c("CCSM"), 
-                        path = "F:/mauricio/r-enm/01_enm/00_present/00_present_ecoclimate/01_variables/01_raw", 
+                        aogcm = c("CCSM", "CNRM", "MIROC"), 
+                        path = "", 
                         erase_zip_files = TRUE, 
-                        erase_txt_files = TRUE, 
-                        operational_system = "windows")
+                        erase_txt_files = TRUE)
 
 # import
 var <- dir(patter = ".tif", recursive = TRUE) %>% 
@@ -79,27 +76,29 @@ var
 
 # names
 names(var)
-names(var) <- c(paste0("bio0", 1:9), paste0("bio", 10:19))
+names(var) <- stringr::str_replace(names(var), "modern_1950_1999_", "")
 names(var)
 var
 
 # plot
-tm_shape(var$bio01) +
+tm_shape(var$ccsm_bio01) +
   tm_raster(palette = "-Spectral") +
-  tm_layout(legend.position = c("left", "bottom"))
+  tm_layout() +
+  tm_shape(li) +
+  tm_borders()
 
-# extention and scale -----------------------------------------------------
+# extension and scale -----------------------------------------------------
 # directory
 setwd(path); dir.create("02_processed"); setwd("02_processed")
 
-# adust extention
+# adjust extension
 var_li <- var %>% 
   raster::crop(li) %>% 
   raster::mask(li)
 var_li
 
 # plot
-tm_shape(var_li$bio01) +
+tm_shape(var_li$ccsm_bio01) +
   tm_raster(palette = "-Spectral") +
   tm_shape(li) +
   tm_borders(col = "black") +
@@ -133,7 +132,7 @@ tibble::glimpse(var_da)
 cor_table <- corrr::correlate(var_da, method = "spearman") 
 cor_table
 
-# preparate table
+# prepare table
 cor_table_summary <- cor_table %>% 
   corrr::shave() %>%
   corrr::fashion()

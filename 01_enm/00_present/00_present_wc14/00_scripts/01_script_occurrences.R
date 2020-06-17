@@ -1,10 +1,10 @@
 #' ---
 #' title: occ - download and clean
 #' author: mauricio vancine
-#' date: 2019-05-17
+#' date: 2019-06-16
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -13,14 +13,16 @@ library(CoordinateCleaner)
 library(ecospat)
 library(lubridate)
 library(rnaturalearth)
-library(sampbias)
 library(sf)
 library(tidyverse)
+library(tmap)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14/02_occurrences"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
 setwd(path)
-dir()
+dir.create("01_occurrences"); setwd("01_occurrences")
+path <- getwd()
+path
 
 # import data -------------------------------------------------------------
 # data
@@ -67,7 +69,7 @@ for(i in sp_list){
                     longitude = as.numeric(longitude),
                     latitude = as.numeric(latitude),
                     year = NA,
-                    base = prov,
+                    base = prov %>% stringr::str_to_lower(),
                     r_package = "spocc") %>% 
       dplyr::select(name, species_search, longitude, latitude, year, base, r_package)
     
@@ -80,7 +82,7 @@ for(i in sp_list){
                     longitude = as.numeric(longitude),
                     latitude = as.numeric(latitude),
                     year = lubridate::year(date),
-                    base = prov,
+                    base = prov %>% stringr::str_to_lower(),
                     r_package = "spocc") %>% 
       dplyr::select(name, species_search, longitude, latitude, year, base, r_package)
     
@@ -109,7 +111,7 @@ for(i in sp_list){
       dplyr::mutate(name = scrubbed_species_binomial,
                     species_search = i,
                     year = lubridate::year(occ_bien$date_collected),
-                    base = datasource,
+                    base = datasource %>% stringr::str_to_lower(),
                     r_package = "bien") %>% 
       dplyr::select(name, species_search, longitude, latitude, year, base, r_package)
   }
@@ -119,7 +121,9 @@ for(i in sp_list){
   
   # export
   readr::write_csv(occ_data, 
-                   paste0("occ_", i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_"), "_", 
+                   paste0("occ_spocc_bien_", i %>% 
+                            stringr::str_to_lower() %>% 
+                            stringr::str_replace(" ", "_"), "_", 
                           lubridate::today(), ".csv"))
   
 }
@@ -168,10 +172,10 @@ occ_data <- purrr::map_dfr(dir(pattern = ".csv"), readr::read_csv)
 occ_data
 
 # directory
-setwd(path); dir.create("02_integrated")
+setwd(path); dir.create("02_integrated"); setwd("02_integrated")
 
 # export
-readr::write_csv(occ_data, paste0("02_integrated/occ_integrated_", lubridate::today(), ".csv"))
+readr::write_csv(occ_data, paste0("occ_integrated_", lubridate::today(), ".csv"))
 
 # map
 occ_data_vector <- occ_data %>% 
@@ -316,7 +320,6 @@ flags_bias <- CoordinateCleaner::clean_coordinates(
             "equal", # equal coordinates
             "gbif", # radius around GBIF headquarters
             "institutions", # radius around biodiversity institutions
-            "outliers", # records far away from all other records of this species
             "seas", # in the sea
             "urban", # within urban area
             "validity", # outside reference coordinate system
@@ -360,19 +363,17 @@ occ_data_taxa_date_bias_vector <- occ_data_taxa_date_bias %>%
 occ_data_taxa_date_bias_vector
 
 # extent
-li_ex <- rnaturalearth::ne_countries(scale = 110, continent = "South America", returnclass = "sf") %>% 
-  sf::st_bbox() %>% 
-  sf::st_as_sfc()
-li_ex %>% tm_shape() + tm_polygons() + tm_graticules(lines = FALSE)
+li_sa <- rnaturalearth::ne_countries(scale = 110, continent = "South America", returnclass = "sf")
+li_sa %>% tm_shape() + tm_polygons() + tm_graticules(lines = FALSE)
 
 # crop to limit
-occ_data_taxa_date_bias_limit <- sf::st_crop(occ_data_taxa_date_bias_vector, li_ex)
+occ_data_taxa_date_bias_limit <- sf::st_crop(occ_data_taxa_date_bias_vector, li_sa) 
 occ_data_taxa_date_bias_limit
 
 # map
-tm_shape(li, bbox = li_ex) +
+tm_shape(li, bbox = li_sa) +
   tm_polygons() +
-  tm_shape(li_ex) +
+  tm_shape(li_sa) +
   tm_borders(col = "black") +
   tm_shape(occ_data_taxa_date_bias_limit) +
   tm_dots(size = .2, shape = 21, col = "species_search",  
@@ -380,7 +381,7 @@ tm_shape(li, bbox = li_ex) +
   tm_graticules(lines = FALSE) +
   tm_layout(legend.text.fontface = "italic")
 
-# preparate
+# prepare
 occ_data_taxa_date_bias_limit <- occ_data_taxa_date_bias_limit %>%
   sf::st_drop_geometry() %>% 
   as.data.frame
@@ -392,7 +393,6 @@ occ_data_taxa_date_bias_limit_spatial <- ecospat::ecospat.occ.desaggregation(
   min.dist = .5, 
   by = "species") %>%
   tibble::as_tibble() %>% 
-  dplyr::add_count(species) %>%  
   dplyr::select(-x, -y)
 occ_data_taxa_date_bias_limit_spatial
 
@@ -406,7 +406,7 @@ occ_data_taxa_date_bias_limit_spatial_vector <- occ_data_taxa_date_bias_limit_sp
   sf::st_as_sf(coords = c("lon", "lat"), crs = 4326)
 occ_data_taxa_date_bias_limit_spatial_vector
 
-tm_shape(li, bbox = li_ex) +
+tm_shape(li, bbox = li_sa) +
   tm_polygons() +
   tm_shape(occ_data_taxa_date_bias_limit_spatial_vector) +
   tm_dots(size = .2, shape = 21, col = "species_search",  
@@ -415,16 +415,58 @@ tm_shape(li, bbox = li_ex) +
   tm_layout(legend.text.fontface = "italic")
 
 # verify filters ----------------------------------------------------------
+# summary
+occ_data %>% dplyr::count(species_search)
 occ_data_taxa %>% dplyr::count(species)
 occ_data_taxa_date %>% dplyr::count(species)
 occ_data_taxa_date_bias %>% dplyr::count(species)
 occ_data_taxa_date_bias_limit %>% dplyr::count(species)
 occ_data_taxa_date_bias_limit_spatial %>% dplyr::count(species)
 
+# summary total
+sp_list_ <- sp_list %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_")
+sp_list_
+
+occ_filter_total <- occ_data %>% 
+  dplyr::mutate(species = name %>% 
+                  stringr::str_to_lower() %>% 
+                  stringr::str_replace(" ", "_") %>% 
+                  stringr::str_split(" ", simplify = TRUE) %>% 
+                  tibble::as_tibble() %>% 
+                  dplyr::select(1) %>% 
+                  dplyr::pull()) %>%
+  dplyr::filter(species %in% sp_list_) %>% 
+  dplyr::count(species, base, name = "total")
+occ_filter_total
+
+occ_filter_taxa <- occ_data_taxa %>% 
+  dplyr::count(species, base, name = "taxa")
+occ_filter_taxa
+
+occ_filter_taxa_date <- occ_data_taxa_date %>% 
+  dplyr::count(species, base, name = "date") %>% 
+  tidyr::drop_na()
+occ_filter_taxa_date
+
+occ_filter_taxa_date_spatial <- occ_data_taxa_date_bias_limit_spatial %>% 
+  dplyr::count(species, base, name = "spatial")
+occ_filter_taxa_date_spatial
+
+occ_filter <- occ_filter_total %>% 
+  dplyr::left_join(occ_filter_taxa, by = c("species", "base")) %>% 
+  dplyr::left_join(occ_filter_taxa_date, by = c("species", "base")) %>% 
+  dplyr::left_join(occ_filter_taxa_date_spatial, by = c("species", "base")) %>% 
+  tidyr::drop_na(base) %>% 
+  dplyr::mutate_all(~replace_na(., 0))
+occ_filter
+
 # export ------------------------------------------------------------------
 # export
 readr::write_csv(occ_data_taxa_date_bias_limit_spatial, 
                  paste0("occ_clean_taxa_date_bias_limit_spatial.csv"))
+
+readr::write_csv(occ_filter, 
+                 paste0("occ_filter_summary.csv"))
 
 # -------------------------------------------------------------------------
 

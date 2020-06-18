@@ -1,7 +1,7 @@
 #' ---
 #' title: threshold of ensembles
 #' authors: mauricio vancine
-#' date: 2020-05-18
+#' date: 2020-06-18
 #' ---
 
 # preparate r -------------------------------------------------------------
@@ -19,7 +19,7 @@ dir()
 
 # import data -------------------------------------------------------------
 # occ
-occ <- readr::read_csv("02_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
+occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
 # binatization and area ---------------------------------------------------
@@ -122,7 +122,7 @@ for(i in occ$species %>% unique){
     }
   
   # export area
-  readr::write_csv(table_thr_area, paste0("table_areas_thr_", i, ".csv"))
+  readr::write_csv(table_thr_area, paste0("00_table_areas_thr_", i, ".csv"))
   
 }
 

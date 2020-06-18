@@ -1,12 +1,13 @@
 #' ---
 #' title: install enm packages
 #' author: mauricio vancine
-#' date: 2020-05-15
+#' date: 2020-06-16
 #' ---
 
 # occurrences -------------------------------------------------------------
 # manipulation and visualization
 if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(progress)) install.packages("progress")
 
 # occurrences download
 if(!require(spocc)) install.packages("spocc")
@@ -34,7 +35,7 @@ if(!require(corrr)) install.packages("corrr")
 if(!require(caret)) install.packages("caret")
 
 # algorithms --------------------------------------------------------------
-# suppor analysis
+# support analysis
 if(!require(ecospat)) install.packages("ecospat")
 
 # bioclim, domain, mahalanobis, and brt

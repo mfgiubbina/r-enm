@@ -1,10 +1,10 @@
 #' ---
 #' title: enm - multiple algorithm
 #' authors: matheus lima-ribeiro, mauricio vancine
-#' date: 2020-05-05
+#' date: 2020-06-17
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -14,6 +14,7 @@ options(java.parameters = "-Xmx1g")
 # packages
 library(dismo)
 library(e1071)
+library(gam)
 library(randomForest)
 library(raster)
 library(rJava)
@@ -22,36 +23,46 @@ library(tidyverse)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-raster::beginCluster(n = 2)
+raster::beginCluster(n = parallel::detectCores() - 1)
+
+# maxent
+if(file.exists(paste0(system.file(package = "dismo"), "/java/maxent.jar"))){
+  print("File maxent.jar found!")
+} else{
+  print(paste0("File maxent.jar not found! Downloading in ", paste0(system.file(package = "dismo"), "/java")))
+  setwd(paste0(system.file(package = "dismo"), "/java"))
+  download.file("https://biodiversityinformatics.amnh.org/open_source/maxent/maxent.php?op=download",
+                "maxent.zip")
+  unzip("maxent.zip")}
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
 setwd(path)
 dir()
 
 # import data -------------------------------------------------------------
 # occurrences
-occ <- readr::read_csv("02_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
+occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
 # variables
-setwd(path); setwd("01_variables/04_processed_correlation"); dir()
+setwd(path); setwd("02_variables/04_processed_correlation"); dir()
 
 # present
 var_p <- dir(pattern = "tif$") %>%
-  stringr::str_subset("pres") %>% 
+  stringr::str_subset("present") %>% 
   raster::stack() %>% 
   raster::brick()
-names(var_p) <- stringr::str_replace(names(var_p), "wc14_55km_present_", "")
+names(var_p) <- stringr::str_replace(names(var_p), "var_wc14_55km_present_", "")
 names(var_p)
 var_p
 
 # future
 var_f <- dir(pattern = "tif$") %>% 
-  stringr::str_subset("fut") %>% 
+  stringr::str_subset("future") %>% 
   raster::stack() %>% 
   raster::brick()
-names(var_f) <- stringr::str_replace(names(var_f), "wc14_55km_future_", "")
+names(var_f) <- stringr::str_replace(names(var_f), "var_wc14_55km_future_", "")
 names(var_f)
 var_f
 
@@ -61,7 +72,7 @@ plot(var_f[[1]])
 points(occ$longitude, occ$latitude, pch = 20, col = as.factor(occ$species))
 
 # enms --------------------------------------------------------------------
-# diretory
+# directory
 setwd(path); dir.create("03_enm"); setwd("03_enm")
 
 # parameters
@@ -70,7 +81,7 @@ partition <- .7
 bkg_n <- 1e5
 
 # enms
-for(i in occ$species %>% unique){ # for to each specie
+for(i in occ$species %>% unique){
   
   # directory
   dir.create(i); setwd(i)
@@ -97,10 +108,10 @@ for(i in occ$species %>% unique){ # for to each specie
   # ------------------------------------------------------------------------
   
   # replicas
-  for(r in replica %>% seq){	# number of replicas
+  for(r in replica %>% seq){
     
     # object for evaluation
-    eval_algorithm <- tibble::tibble()
+    eval_method <- tibble::tibble()
     
     # partitioning data	
     pr_sample_train <- pr_specie %>% 
@@ -138,9 +149,12 @@ for(i in occ$species %>% unique){ # for to each specie
     
     # presence-only - distance-based
     DOM <- dismo::domain(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
+    # MAH <- dismo::mahal(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
     
     # presence-absence - statistics
-    GLM <- glm(formula = pb ~ ., data = train_pa, family = "binomial")
+    # GLM <- glm(formula = pb ~ ., data = train_pa, family = "binomial")
+    # GAM <- gam::gam(formula = paste0("pb", "~", paste0("s(", colnames(train_pa)[-1], ")", collapse = "+")) %>% as.formula, 
+    #                 family = "binomial", data = train_pa, warning = FALSE)
     
     # presence-absence - machine learning
     RFR <- randomForest::randomForest(formula = pb ~ ., data = train_pa)
@@ -150,8 +164,15 @@ for(i in occ$species %>% unique){ # for to each specie
     Sys.setenv(NOAWT = TRUE)
     MAX <- dismo::maxent(x = train_pb %>% dplyr::select(-pb), p = train_pb %>% dplyr::select(pb))
     
-    # lists
-    fit <- list(bioclim = BIO, domain = DOM, glm = GLM, randomforest = RFR, svm = SVM, maxent = MAX)
+    # methods list
+    fit <- list(bioclim = BIO, 
+                domain = DOM, 
+                # mahalanobis = MAH, 
+                # glm = GLM, 
+                # gam = GAM, 
+                randomforest = RFR, 
+                svm = SVM, 
+                maxent = MAX)
     
     # -------------------------------------------------------------------------
 
@@ -160,6 +181,7 @@ for(i in occ$species %>% unique){ # for to each specie
       
       # information
       print(paste("Model predict algorithm", fit[a] %>% names))
+      print("present")
       
       # model predict present
       model_predict_p <- raster::predict(var_p, fit[[a]], progress = "text")
@@ -190,7 +212,7 @@ for(i in occ$species %>% unique){ # for to each specie
         
         # model export present
         raster::writeRaster(x = model_predict_f, 
-                            filename = paste0("enm_", i, "_", fit[a] %>% names, "_r", ifelse(r < 10, paste0("0", r), r), "_future_", f), 
+                            filename = paste0("enm_", i, "_", fit[a] %>% names, "_r", ifelse(r < 10, paste0("0", r), r), "_", f), 
                             format = "GTiff", 
                             options = c("COMPRESS=DEFLATE"), 
                             overwrite = TRUE)
@@ -211,19 +233,19 @@ for(i in occ$species %>% unique){ # for to each specie
       # evaluation data
       eval_data <- tibble::tibble(species = i, 
                                   replica = r, 
-                                  algorithm = fit[a] %>% names, 
+                                  method = fit[a] %>% names, 
                                   thr_max_spec_sens = dismo::threshold(eval, "spec_sens"),
                                   tss_spec_sens = tss_spec_sens,
                                   auc = eval@auc, 
                                   file = paste0("enm_", i, "_", fit[a] %>% names, "_r", ifelse(r < 10, paste0("0", r), r)))
       
       # combine evaluation
-      eval_algorithm <- dplyr::bind_rows(eval_algorithm, eval_data)
+      eval_method <- dplyr::bind_rows(eval_method, eval_data)
       
     } # ends for "a"
     
     # combine evaluation
-    eval_species <- dplyr::bind_rows(eval_species, eval_algorithm)
+    eval_species <- dplyr::bind_rows(eval_species, eval_method)
     
   } # ends for "r"
   

@@ -35,7 +35,7 @@ if(!require(corrr)) install.packages("corrr")
 if(!require(caret)) install.packages("caret")
 
 # algorithms --------------------------------------------------------------
-# suppor analysis
+# support analysis
 if(!require(ecospat)) install.packages("ecospat")
 
 # bioclim, domain, mahalanobis, and brt

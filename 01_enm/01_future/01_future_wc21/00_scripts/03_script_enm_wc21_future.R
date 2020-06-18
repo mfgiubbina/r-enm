@@ -1,10 +1,10 @@
 #' ---
 #' title: enm - multiple algorithm
 #' authors: matheus lima-ribeiro, mauricio vancine
-#' date: 2020-05-17
+#' date: 2020-06-17
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -23,7 +23,7 @@ library(tidyverse)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-# raster::beginCluster(n = parallel::detectCores() - 1)
+raster::beginCluster(n = parallel::detectCores() - 1)
 
 # maxent
 if(file.exists(paste0(system.file(package = "dismo"), "/java/maxent.jar"))){
@@ -36,33 +36,32 @@ if(file.exists(paste0(system.file(package = "dismo"), "/java/maxent.jar"))){
   unzip("maxent.zip")}
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc21"
 setwd(path)
 dir()
 
 # import data -------------------------------------------------------------
 # occurrences
-occ <- readr::read_csv("02_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
+occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
 # variables
-setwd(path); setwd("01_variables/04_processed_correlation"); dir()
+setwd(path); setwd("02_variables/04_processed_correlation"); dir()
 
 # present
 var_p <- dir(pattern = "tif$") %>%
   stringr::str_subset("present") %>% 
   raster::stack() %>% 
   raster::brick()
-names(var_p) <- stringr::str_replace(names(var_p), "var_wc14_55km_present_", "")
+names(var_p) <- stringr::str_replace(names(var_p), "wc21_55km_present_", "")
 names(var_p)
 var_p
 
 # future
 var_f <- dir(pattern = "tif$") %>% 
   stringr::str_subset("future") %>% 
-  raster::stack() %>% 
-  raster::brick()
-names(var_f) <- stringr::str_replace(names(var_f), "var_wc14_55km_future_", "")
+  raster::stack()
+names(var_f) <- stringr::str_replace(names(var_f), "wc21_55km_future_", "")
 names(var_f)
 var_f
 
@@ -72,13 +71,12 @@ plot(var_f[[1]])
 points(occ$longitude, occ$latitude, pch = 20, col = as.factor(occ$species))
 
 # enms --------------------------------------------------------------------
-# diretory
+# directory
 setwd(path); dir.create("03_enm"); setwd("03_enm")
 
 # parameters
 replica <- 5
 partition <- .7
-bkg_n <- 1e5
 
 # enms
 for(i in occ$species %>% unique){
@@ -175,7 +173,7 @@ for(i in occ$species %>% unique){
                 maxent = MAX)
     
     # -------------------------------------------------------------------------
-
+    
     # predict
     for(a in seq(fit)){
       
@@ -196,13 +194,19 @@ for(i in occ$species %>% unique){
       # ------------------------------------------------------------------------
       
       # model predict future
-      for(f in stringr::str_sub(names(var_f), 1, 13) %>% unique){
+      fut_var <- names(var_f) %>% 
+        stringr::str_split("_bio") %>% 
+        purrr::map(., 1)
+      fut_var
+      
+      for(f in fut_var){
         
         # information
         print(f)
         
         # select variables
-        var_f_sel <- var_f[[grep(f, names(var_f), value = TRUE)]]
+        var_f_sel <- var_f[[grep(f, names(var_f), value = TRUE)]] %>% 
+          raster::brick()
         
         # names
         names(var_f_sel) <- names(var_p)

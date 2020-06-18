@@ -1,10 +1,10 @@
 #' ---
-#' title: variables - download, adjust extention and resolution, and correlation to future
+#' title: variables - download, adjust extension and resolution, and correlation to future
 #' author: mauricio vancine
-#' date: 2020-05-09
+#' date: 2020-06-17
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -19,20 +19,20 @@ library(tmap)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-raster::beginCluster(n = 4)
-raster::rasterOptions()
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future_wc21/01_variables"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc21"
 setwd(path)
-dir()
+dir.create("02_variables"); setwd("02_variables")
+path <- getwd()
+path
 
 # limits ------------------------------------------------------------------
 # limits
-li <- rnaturalearth::ne_countries(scale = 110, country = "Brazil", returnclass = "sf")
+li <- rnaturalearth::ne_countries(scale = 110, continent = "South America", returnclass = "sf")
 li
 
-li_ex <- rnaturalearth::ne_countries(scale = 110, country = "Brazil", returnclass = "sf") %>% 
+li_ex <- li %>% 
   sf::st_bbox() %>% 
   sf::st_as_sfc()
 li_ex
@@ -58,15 +58,9 @@ getwd()
 
 # download present bioclimates
 # wordclim
-da_wc <- tibble::tibble(
-  url = paste0("https://biogeo.ucdavis.edu/data/worldclim/v2.1/base/",
-               c("wc2.1_10m_elev.zip", "wc2.1_10m_bio.zip")),
-  destfile = c("wc2.1_10m_elev.zip", "wc2.1_10m_bio.zip")
-) %>% as.list
-da_wc
-
 # download
-purrr::map2(da_wc$url, da_wc$destfile, download.file)
+download.file(url = "https://biogeo.ucdavis.edu/data/worldclim/v2.1/base/wc2.1_10m_bio.zip", 
+            destfile = "wc2.1_10m_bio.zip", mode = "wb")
 
 # unzip
 purrr::map(dir(pattern = ".zip"), unzip)
@@ -101,24 +95,61 @@ destfiles <- "https://worldclim.org/data/cmip6/cmip6_clim10m.html" %>%
 destfiles
 
 # download
-purrr::map2(url, destfiles, download.file)
+purrr::map2(url, destfiles, download.file, mode = "wb")
 
 # unzip
 purrr::map(dir(pattern = ".zip"), unzip)
 
-# adust extention and resolution ------------------------------------------
+# import variables --------------------------------------------------------
+# directory
+setwd(path); dir.create("01_raw"); setwd("01_raw")
+getwd()
+
+# import present
+var_p <- dir(pattern = ".tif$") %>% 
+  raster::stack()
+var_p
+
+# names
+names(var_p)
+names(var_p) <- c("bio01", paste0("bio", 10:19), paste0("bio0", 2:9))
+names(var_p)
+var_p
+
+# import future
+var_f <- dir(pattern = "bioc", recursive = TRUE) %>% 
+  stringr::str_subset(".tif$") %>% 
+  raster::stack()
+var_f
+
+# names
+names(var_f)
+names(var_f) <- names(var_f) %>% 
+  stringr::str_to_lower() %>%
+  stringr::str_replace("wc2.1_10m_bioc_", "") %>% 
+  stringr::str_replace("cnrm.esm2.1", "cnrmesm21") %>% 
+  stringr::str_replace("_2021.|_2041.|_2061.|_2081.", "_") %>% 
+  stringr::str_replace("[.]", "_bio0") %>% 
+  stringr::str_replace("_bio01", "_bio1") %>% 
+  stringr::str_replace("bio1$", "bio01")
+names(var_f)
+var_f
+
+# adjust extension and resolution ------------------------------------------
 # directory
 setwd(path); dir.create("02_processed"); setwd("02_processed")
 
-# adust extention and resolution - present
+# adjust extension to mask and resolution - present
 var_p_li <- raster::crop(x = var_p, y = li) %>% 
+  raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
 var_p_li
 
 plot(var_p_li[[1]])
 
-# adust extention to mask and resolution - present
+# adjust extension to mask and resolution - future
 var_f_li <- raster::crop(x = var_f, y = li) %>% 
+  raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
 var_f_li
 
@@ -126,16 +157,16 @@ plot(var_f_li[[1]])
 
 # export present
 raster::writeRaster(x = var_p_li, 
-                    filename = paste0("wc14_li_55km_present_", names(var_p_li)), 
+                    filename = paste0("var_wc21_li_55km_present_", names(var_p_li)), 
                     bylayer = TRUE, 
                     options = c("COMPRESS=DEFLATE"), 
                     format = "GTiff",
                     progress = "text",
                     overwrite = TRUE)
 
-# export
+# export future
 raster::writeRaster(x = var_f_li, 
-                    filename = paste0("wc14_li_55km_future_", names(var_f_li)), 
+                    filename = paste0("var_wc21_li_55km_future_", names(var_f_li)), 
                     bylayer = TRUE, 
                     options = c("COMPRESS=DEFLATE"), 
                     format = "GTiff", 
@@ -167,7 +198,7 @@ cor_table_summary <- cor_table %>%
 cor_table_summary
 
 # export
-readr::write_csv(cor_table_summary, "correlation.csv")
+readr::write_csv(cor_table_summary, "var_correlation.csv")
 
 # select variables
 # correlated variables
@@ -200,8 +231,7 @@ var_ggpairs <- var_da_cor07 %>%
           axisLabels = "none") +
   theme_bw()
 var_ggpairs
-ggsave(filename = "correlation_plot.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
-
+ggsave(filename = "var_correlation_plot.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
 
 # export variables --------------------------------------------------------
 # directory
@@ -214,7 +244,7 @@ var_p_li_sel
 
 # export present
 raster::writeRaster(x = var_p_li_sel, 
-                    filename = paste0("wc14_55km_present_", names(var_p_li_sel)), 
+                    filename = paste0("var_wc21_55km_present_", names(var_p_li_sel)), 
                     bylayer = TRUE, 
                     options = c("COMPRESS=DEFLATE"), 
                     format = "GTiff",
@@ -227,7 +257,7 @@ var_f_li_sel
 
 # export
 raster::writeRaster(x = var_f_li_sel, 
-                    filename = paste0("wc14_55km_future_", names(var_f_li_sel)), 
+                    filename = paste0("var_wc21_55km_future_", names(var_f_li_sel)), 
                     bylayer = TRUE, 
                     options = c("COMPRESS=DEFLATE"), 
                     format = "GTiff", 

@@ -1,10 +1,10 @@
 #' ---
-#' title: ensemble - weighted average and uncertainties
+#' title: ensemble - weighted average and uncertainties - hierarchical anova
 #' authors: mauricio vancine
-#' date: 2020-05-18
+#' date: 2020-06-16
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -28,7 +28,7 @@ setwd("04_evaluation")
 
 # import evaluations
 eva <- dir(pattern = "00_evaluation_", recursive = TRUE) %>% 
-  purrr::map_dfr(., readr::read_csv)
+  purrr::map_dfr(., col_types = cols(), readr::read_csv)
 eva
 
 # weighted average ensemble  ----------------------------------------------

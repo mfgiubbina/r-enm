@@ -1,10 +1,10 @@
 #' ---
-#' title: variables - download, adjust extention and resolution, and correlation to future
+#' title: variables - download, adjust extension and resolution, and correlation to future
 #' author: mauricio vancine
-#' date: 2020-05-17
+#' date: 2020-06-17
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -23,7 +23,7 @@ raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
 # directory
 path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
 setwd(path)
-dir.create("01_variables"); setwd("01_variables")
+dir.create("02_variables"); setwd("02_variables")
 path <- getwd()
 path
 
@@ -105,18 +105,18 @@ for(i in 1:nrow(da_down_fut)){
 
 var_f
 
-# adust extention and resolution ------------------------------------------
+# adjust extension and resolution ------------------------------------------
 # directory
 setwd(path); dir.create("02_processed"); setwd("02_processed")
 
-# adust extention and resolution - present
+# adjust extension and resolution - present
 var_p_li <- raster::crop(x = var_p, y = li) %>% 
   raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
 var_p_li
 plot(var_p_li[[1]])
 
-# adust extention to mask and resolution - present
+# adjust extension to mask and resolution - present
 var_f_li <- raster::crop(x = var_f, y = li) %>% 
   raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
@@ -190,8 +190,8 @@ var_da_cor07 %>%
 var_ggpairs <- var_da_cor07 %>% 
   dplyr::select(sort(tidyselect::peek_vars())) %>% 
   dplyr::sample_n(1e3) %>% 
-  ggpairs(lower = list(continuous = wrap(ggally_smooth_loess, pch = 21, 
-                                         color = "gray30", fill = "gray50", size = 1)),
+  ggpairs(lower = list(continuous = wrap(ggally_smooth_loess,
+                                        pch = 21, color = "gray30", fill = "gray50", size = 1)),
           diag = list(continuous = wrap(ggally_barDiag, color = "black", 
                                         color = "gray30", fill = "gray50", bins = 10)),
           upper = list(continuous = wrap(ggally_cor, color = "black", size = 5, 

@@ -1,7 +1,7 @@
 #' ---
-#' title: variables - download, adjust extension and resolution, and correlation
+#' title: variables - download, adjust extent and resolution, and correlation
 #' author: mauricio vancine
-#' date: 2019-06-16
+#' date: 2019-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -40,7 +40,7 @@ li_ex
 
 # plot
 tm_shape(li_ex) +
-  tm_polygons() +
+  tm_polygons(border.col = "red") +
   tm_shape(li) +
   tm_polygons(col = "gray70")
 
@@ -57,16 +57,9 @@ sf::write_sf(li_ex, "limit_ext.shp")
 setwd(path); dir.create("01_raw"); setwd("01_raw")
 getwd()
 
-# wordclim
-da_wc <- tibble::tibble(
-  url = paste0("https://biogeo.ucdavis.edu/data/worldclim/v2.1/base/",
-               c("wc2.1_10m_elev.zip", "wc2.1_10m_bio.zip")),
-  destfile = c("wc2.1_10m_elev.zip", "wc2.1_10m_bio.zip")
-) %>% as.list
-da_wc
-
 # download
-purrr::map2(da_wc$url, da_wc$destfile, download.file)
+download.file(url = "https://biogeo.ucdavis.edu/data/worldclim/v2.1/base/wc2.1_10m_bio.zip",
+              destfile = "wc2.1_10m_bio.zip", mode = "wb")
 
 # unzip
 purrr::map(dir(pattern = ".zip"), unzip)
@@ -78,7 +71,7 @@ var
 
 # rename
 names(var)
-names(var) <- c("bio01", paste0("bio", 10:19), paste0("bio0", 2:9), "elev")
+names(var) <- c("bio01", paste0("bio", 10:19), paste0("bio0", 2:9))
 names(var)
 var
 
@@ -87,11 +80,11 @@ tm_shape(var$bio01) +
   tm_raster(palette = "-Spectral") +
   tm_layout(legend.position = c("left", "bottom"))
 
-# extention and scale -----------------------------------------------------
+# extent and scale -----------------------------------------------------
 # directory
 setwd(path); dir.create("02_processed"); setwd("02_processed")
 
-# adust extention and resolution
+# adjust extent and resolution
 var_li <- raster::crop(x = var, y = li) %>% 
   raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
@@ -132,14 +125,14 @@ tibble::glimpse(var_da)
 cor_table <- corrr::correlate(var_da, method = "spearman") 
 cor_table
 
-# preparate table
+# prepare table
 cor_table_summary <- cor_table %>% 
   corrr::shave() %>%
   corrr::fashion()
 cor_table_summary
 
 # export
-readr::write_csv(cor_table_summary, "correlacao.csv")
+readr::write_csv(cor_table_summary, "table_correlacao.csv")
 
 # select variables
 # correlated variables
@@ -172,10 +165,10 @@ var_ggpairs <- var_da_cor07 %>%
           axisLabels = "none") +
   theme_bw()
 var_ggpairs
-ggsave(filename = "correlation_plot.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
+ggsave(filename = "plot_correlation.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
 
 # create variables --------------------------------------------------------
-# dictory
+# directory
 setwd(path); dir.create("04_processed_correlation"); setwd("04_processed_correlation")
 getwd()
 

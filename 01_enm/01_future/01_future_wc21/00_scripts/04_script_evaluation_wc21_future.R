@@ -1,10 +1,10 @@
 #' ---
-#' title: evaluate - table and boxplot
+#' title: evaluation
 #' authors: mauricio vancine
-#' date: 2019-05-06
+#' date: 2020-06-16
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -13,7 +13,7 @@ library(tidyverse)
 library(wesanderson)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future/04_evaluation"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc21"
 setwd(path)
 dir()
 
@@ -25,18 +25,17 @@ eva
 # evaluate analysis -------------------------------------------------------
 for(i in eva$species %>% unique){
   
-  # select specie
-  eva_sp <- eva %>% 
-    dplyr::filter(species == i)
+  # information
+  print(paste("Evaluation to", i))
   
-  # tables
   # directory
-  setwd(path); setwd(i)
+  setwd(path); setwd(paste0("04_evaluation/", i))
   
   # table
-  eva_table <- eva_sp %>% 
+  eva_table <- eva %>% 
+    dplyr::filter(species == i) %>% 
     dplyr::mutate(species = species %>% stringr::str_to_title() %>% stringr::str_replace("_", " ")) %>% 
-    dplyr::group_by(species, algorithm) %>% 
+    dplyr::group_by(species, method) %>% 
     dplyr::summarise(tss_mean = mean(tss_spec_sens) %>% round(3), 
                      tss_sd = sd(tss_spec_sens) %>% round(3),
                      auc_mean = mean(auc) %>% round(3), 
@@ -44,7 +43,7 @@ for(i in eva$species %>% unique){
   eva_table
   
   # export
-  readr::write_csv(eva_table, paste0("01_evaluation_summary_table_", i, ".csv"))
+  readr::write_csv(eva_table, paste0("01_table_eval_summary_", i, ".csv"))
   
   # boxplots
   for(j in c("tss_spec_sens", "auc")){
@@ -53,15 +52,17 @@ for(i in eva$species %>% unique){
     print(paste(i, j))
     
     # plot  
-    ggplot(data = eva_sp) + 
-      aes_string(x = "algorithm", y = j, color = "algorithm") +
+    eva %>% 
+      dplyr::filter(species == i) %>% 
+      ggplot() + 
+      aes_string(x = "method", y = j, color = "method") +
       geom_boxplot(size = .5, fill = "gray90", color = "black") +
       geom_jitter(width = 0.2, size = 4, alpha = .7) +
-      scale_color_manual(values = wesanderson::wes_palette(name = "Darjeeling1", n = eva$algorithm %>% unique %>% length, 
+      scale_color_manual(values = wesanderson::wes_palette(name = "Darjeeling1", n = eva$method %>% unique %>% length, 
                                                            type = "continuous")) +
-      labs(x = "Algorithms", 
+      labs(x = "Methods", 
            y = stringr::str_to_upper(j) %>% stringr::str_replace("_", " "), 
-           title = i %>% stringr::str_to_title() %>% stringr::str_replace("_", " ")) + 
+           title = i %>% stringr::str_to_title() %>% stringr::str_replace_all("_", " ")) + 
       ylim(c(-.01, 1.05)) + 
       theme_bw() +
       geom_hline(yintercept = ifelse(j == "tss_spec_sens", .5, .75), color = "red") +
@@ -70,7 +71,7 @@ for(i in eva$species %>% unique){
             axis.text.x = element_text(size = 12),
             axis.text.y = element_text(size = 15), 
             axis.title = element_text(size = 17))
-    ggsave(paste0("02_boxplot_jitter_an_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
+    ggsave(paste0("03_plot_eval_meth_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
     
   }
   

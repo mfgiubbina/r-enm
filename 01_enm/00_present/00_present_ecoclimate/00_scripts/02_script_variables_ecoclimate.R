@@ -1,5 +1,5 @@
 #' ---
-#' title: variables - download, adjust extension and resolution, and correlation
+#' title: variables - download, adjust extent and resolution, and correlation
 #' author: mauricio vancine
 #' date: 2019-05-13
 #' ---
@@ -87,11 +87,11 @@ tm_shape(var$ccsm_bio01) +
   tm_shape(li) +
   tm_borders()
 
-# extension and scale -----------------------------------------------------
+# extent and scale -----------------------------------------------------
 # directory
 setwd(path); dir.create("02_processed"); setwd("02_processed")
 
-# adjust extension
+# adjust extent
 var_li <- var %>% 
   raster::crop(li) %>% 
   raster::mask(li)

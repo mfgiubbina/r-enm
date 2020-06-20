@@ -1,7 +1,7 @@
 #' ---
 #' title: maps
 #' authors: mauricio vancine
-#' date: 2020-06-16
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -79,7 +79,7 @@ for(i in occ$species %>% unique){
   
   # import
   ens <- dir(pattern = i) %>%
-    stringr::str_subset(paste0("ensemble_", i, ".tif")) %>% 
+    stringr::str_subset(paste0("ens_", i, ".tif")) %>% 
     raster::raster()
   
   # directory
@@ -120,11 +120,11 @@ for(i in occ$species %>% unique){
   
   # binary ensemble ---------------------------------------------------------
   # directory
-  setwd(path); setwd("06_ensembles_thrs"); setwd(i)
+  setwd(path); setwd("06_ensemble_thresholds"); setwd(i)
   
   # import
   ens <- dir(pattern = i) %>% 
-    stringr::str_subset(paste0("ensemble_", i, "_")) %>% 
+    stringr::str_subset(paste0("ens_", i, "_")) %>% 
     stringr::str_subset(".tif$") %>% 
     raster::stack()
   
@@ -177,7 +177,7 @@ for(i in occ$species %>% unique){
   # import
   unc <- dir(pattern = i) %>% 
     stringr::str_subset(".tif$") %>% 
-    stringr::str_subset("uncertainties") %>% 
+    stringr::str_subset("unc") %>% 
     raster::stack()
   
   # directory
@@ -194,19 +194,18 @@ for(i in occ$species %>% unique){
     map_unc <- ggplot() +
       geom_raster(data = da, aes(x, y, fill = unc)) +
       geom_sf(data = li, fill = NA, color = "gray30") +
-      geom_label(aes(x = -45, y = -38), size = 5,
-                 label = paste0(names(unc[[j]]) %>% 
-                                  stringr::str_replace(i, "") %>% 
-                                  stringr::str_replace_all("[0-9]", "") %>%
-                                  stringr::str_replace_all("uncertainties", "") %>%
-                                  stringr::str_replace_all("_", " ") %>% 
-                                  stringr::str_to_title() %>% 
-                                  stringi::stri_trim())) +
       scale_color_manual(values = "black", guide = guide_legend(order = 1)) +
       scale_fill_gradientn(colours = rev(RColorBrewer::brewer.pal(name = "Spectral", n = 9)), limits = c(0, 100)) +
       coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
       labs(x = "Longitude", y = "Latitude", 
-           fill = "Uncertainties (%)") +
+           fill = paste0("Uncertainty \n",
+                         paste0(names(unc[[j]]) %>% 
+                                  stringr::str_replace(i, "") %>% 
+                                  stringr::str_replace_all("[0-9]", "") %>%
+                                  stringr::str_replace_all("unc", "") %>%
+                                  stringr::str_replace_all("_", " ") %>%
+                                  stringi::stri_trim()),
+                         " (%)")) +
       annotation_scale(location = "br", width_hint = .3) +
       annotation_north_arrow(location = "tr", which_north = "true", 
                              pad_x = unit(.3, "cm"), pad_y = unit(.3, "cm"),
@@ -219,7 +218,7 @@ for(i in occ$species %>% unique){
                                              linetype = "solid", 
                                              colour = "black"),
             axis.title = element_text(size = 12, face = "plain"),
-            legend.position = c(.75, .16))
+            legend.position = c(.75, .17))
     map_unc
     
     # export

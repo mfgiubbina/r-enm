@@ -1,7 +1,7 @@
 #' ---
 #' title: niche overlap ecospat
 #' author: mauricio vancine
-#' date: 2020-06-17
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -14,7 +14,7 @@ library(parallel)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
 setwd(path)
 dir()
 
@@ -47,7 +47,7 @@ setwd(path); setwd("02_variables/04_processed_correlation"); dir()
 var <- dir(pattern = "tif$") %>% 
   raster::stack() %>% 
   raster::brick()
-names(var) <- stringr::str_replace(names(var), "var_wc14_55km_", "")
+names(var) <- stringr::str_replace(names(var), "var_wc21_55km_", "")
 names(var)
 var
 
@@ -95,7 +95,7 @@ z1 <- ecospat::ecospat.grid.clim.dyn(glob = scores_bkg,
                                      sp = scores_sp1, 
                                      R = 100, 
                                      th.sp = 0, 
-                                     th.env = .1)
+                                     th.env = 0)
 z1
 
 plot(z1$z.uncor)
@@ -107,7 +107,7 @@ z2 <- ecospat::ecospat.grid.clim.dyn(glob = scores_bkg,
                                      sp = scores_sp2, 
                                      R = 100, 
                                      th.sp = 0, 
-                                     th.env = .1)
+                                     th.env = 0)
 z2
 
 plot(z2$z.uncor)
@@ -131,7 +131,7 @@ ecospat::ecospat.plot.niche.dyn(z1, z2,
 # equivalency test --------------------------------------------------------
 # niche equivalency test
 eq <- ecospat::ecospat.niche.equivalency.test(z1, z2, 
-                                              rep = 10, 
+                                              rep = 3, 
                                               alternative = "greater", 
                                               ncores = parallel::detectCores() - 1)
 eq
@@ -145,7 +145,7 @@ ecospat::ecospat.plot.overlap.test(eq, type = "D", title = "Equivalency")
 # similarity test ----------------------------------------------------------
 # niche similarity test
 si_sp1_sp2 <- ecospat::ecospat.niche.similarity.test(z1, z2, 
-                                                     rep = 10, 
+                                                     rep = 3, 
                                                      alternative = "greater",
                                                      rand.type = 1, 
                                                      ncores = parallel::detectCores() - 1)
@@ -153,7 +153,7 @@ si_sp1_sp2
 
 si_sp2_sp1 <- ecospat::ecospat.niche.similarity.test(z2, 
                                                      z1, 
-                                                     rep = 10, 
+                                                     rep = 3, 
                                                      alternative = "greater",
                                                      rand.type = 1, 
                                                      ncores = parallel::detectCores() - 1)
@@ -196,10 +196,10 @@ tibble::tibble(
         mean(si_sp1_sp2$sim$D), sd(si_sp1_sp2$sim$D), si_sp1_sp2$p.D,
         mean(si_sp2_sp1$sim$D), sd(si_sp2_sp1$sim$D), si_sp2_sp1$p.D)) %>% 
   dplyr::mutate(d = round(d, 2)) %>% 
-  readr::write_csv("overlap_test.csv")
+  readr::write_csv("table_overlap_test.csv")
 
 # figure
-png("overlap_niche.png", wi = 25, he = 20, un = "cm", res = 300)
+png("plot_overlap_niche.png", wi = 25, he = 20, un = "cm", res = 300)
 layout(matrix(c(1,1,2,2, 1,1,2,2, 3,3,4,4, 3,3,5,5), 4, 4, byrow = TRUE))
 layout.show(5)
 ecospat::ecospat.plot.contrib(contrib = pca_env$co, eigen = pca_env$eig)
@@ -211,7 +211,7 @@ ecospat::ecospat.plot.overlap.test(eq, type = "D", title = "Equivalency")
 ecospat::ecospat.plot.overlap.test(si_sp1_sp2, type = "D", title = "Similarity (p2 -> sp1)")
 ecospat::ecospat.plot.overlap.test(si_sp2_sp1, type = "D", title = "Similarity (sp1 -> sp2)")
 def.par <- par(no.readonly = TRUE)
-par(def.par)  #- reset to default
+par(def.par)  # reset to default
 dev.off()
 
 # end ---------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #' ---
-#' title: graphics
-#' authors: mauricio vancine
-#' date: 2020-06-16
+#' title: uncertainties graphics
+#' author: mauricio vancine
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -13,13 +13,13 @@ library(raster)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc21"
+path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
 setwd(path)
 dir()
 
 # graphics ----------------------------------------------------------------
 # directory
-dir.create("08_graphics_uncertainties")
+dir.create("08_graphic_uncertainties")
 
 # directory
 setwd(path); setwd("05_ensembles")
@@ -38,7 +38,7 @@ for(i in sp){
   
   # import
   ens <- dir(pattern = i) %>%
-    stringr::str_subset(paste0("ensemble_", i, ".tif")) %>% 
+    stringr::str_subset(paste0("ens_", i, ".tif")) %>% 
     raster::raster() %>% 
     raster::values()
   
@@ -49,11 +49,11 @@ for(i in sp){
   # import
   unc <- dir(pattern = i) %>% 
     stringr::str_subset(".tif$") %>% 
-    stringr::str_subset("uncertainties") %>% 
+    stringr::str_subset("unc") %>% 
     raster::stack()
   
   # directory
-  setwd(path); setwd("08_graphics_uncertainties"); dir.create(i); setwd(i)
+  setwd(path); setwd("08_graphic_uncertainties"); dir.create(i); setwd(i)
   
   # graphics ----------------------------------------------------------------
   # combine
@@ -68,11 +68,11 @@ for(i in sp){
     scale_alpha(range = c(0.00, 0.5), guide = FALSE) +
     geom_point(color = "black", size = .5, alpha = .5, pch = 20) +
     geom_density2d(bins = 10) +
-    labs(x = "Suitability", y = "Methods uncertainties (%)") +
+    labs(x = "Suitability", y = "Method uncertainties (%)") +
     theme_bw() +
     theme(axis.title = element_text(size = 15),
           axis.text = element_text(size = 12))
-  ggsave(paste0("methods_uncertainties_and_suitability_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
+  ggsave(paste0("plot_method_uncertainties_and_suitability_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
   
   ggplot(data = da_sui_unc) +
     aes(x = sui, y = unc_res) +
@@ -81,11 +81,11 @@ for(i in sp){
     scale_alpha(range = c(0.00, 0.5), guide = FALSE) +
     geom_point(color = "black", size = .5, alpha = .5, pch = 20) +
     geom_density2d(bins = 10) +
-    labs(x = "Suitability", y = "Residuals uncertainties (%)") +
+    labs(x = "Suitability", y = "Residual uncertainties (%)") +
     theme_bw() +
     theme(axis.title = element_text(size = 15),
           axis.text = element_text(size = 12))
-  ggsave(paste0("residuals_uncertainties_and_suitability_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
+  ggsave(paste0("plot_residual_uncertainties_and_suitability_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
   
 }
 

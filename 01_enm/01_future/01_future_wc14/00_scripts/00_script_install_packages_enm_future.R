@@ -26,6 +26,7 @@ if(!require(rgdal)) install.packages("rgdal")
 if(!require(rgeos)) install.packages("rgeos")
 if(!require(RColorBrewer)) install.packages("RColorBrewer")
 if(!require(sf)) install.packages("sf")
+if(!require(wesanderson)) devtools::install_github("karthik/wesanderson")
 
 # download
 if(!require(rnaturalearth)) install.packages("rnaturalearth")

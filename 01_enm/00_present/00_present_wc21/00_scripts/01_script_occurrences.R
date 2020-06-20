@@ -1,7 +1,7 @@
 #' ---
 #' title: occ - download and clean
 #' author: mauricio vancine
-#' date: 2019-06-16
+#' date: 2019-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -201,6 +201,9 @@ gnr_total <- NULL
 
 for(i in sp_list){
   
+  # info
+  print(i)
+  
   # gnr names
   gnr <- taxize::gnr_resolve(i)
   
@@ -229,7 +232,7 @@ gnr_taxa
 gnr_total
 
 # export gnr total
-readr::write_csv(gnr_total, paste0("gnr_total_", lubridate::today(), ".csv"))
+readr::write_csv(gnr_total, paste0("table_gnr_total_", lubridate::today(), ".csv"))
 
 # confer data
 occ_data %>%
@@ -286,7 +289,7 @@ occ_data_taxa_date %>%
   theme(legend.text = element_text(face = "italic"),
         legend.position = "none",
         strip.text = element_text(size = 10, face = "italic"))
-ggsave(filename = "hist_date.png", wi = 20, he = 15, un = "cm", dpi = 300)
+ggsave(filename = "plot_occ_date.png", wi = 20, he = 15, un = "cm", dpi = 300)
 
 # map
 occ_data_taxa_date_vector <- occ_data_taxa_date %>% 
@@ -466,7 +469,7 @@ readr::write_csv(occ_data_taxa_date_bias_limit_spatial,
                  paste0("occ_clean_taxa_date_bias_limit_spatial.csv"))
 
 readr::write_csv(occ_filter, 
-                 paste0("occ_filter_summary.csv"))
+                 paste0("table_occ_filter_summary.csv"))
 
 # -------------------------------------------------------------------------
 

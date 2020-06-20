@@ -1,7 +1,7 @@
 #' ---
-#' title: variables - download, adjust extension and resolution, and correlation to future
+#' title: variables - download, adjust extent and resolution, and correlation to future
 #' author: mauricio vancine
-#' date: 2020-06-17
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -105,18 +105,18 @@ for(i in 1:nrow(da_down_fut)){
 
 var_f
 
-# adjust extension and resolution ------------------------------------------
+# adjust extent and resolution ------------------------------------------
 # directory
 setwd(path); dir.create("02_processed"); setwd("02_processed")
 
-# adjust extension and resolution - present
+# adjust extent and resolution - present
 var_p_li <- raster::crop(x = var_p, y = li) %>% 
   raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
 var_p_li
 plot(var_p_li[[1]])
 
-# adjust extension to mask and resolution - present
+# adjust extent to mask and resolution - present
 var_f_li <- raster::crop(x = var_f, y = li) %>% 
   raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
@@ -166,7 +166,7 @@ cor_table_summary <- cor_table %>%
 cor_table_summary
 
 # export
-readr::write_csv(cor_table_summary, "var_correlation.csv")
+readr::write_csv(cor_table_summary, "table_correlation.csv")
 
 # select variables
 # correlated variables

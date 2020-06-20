@@ -1,10 +1,10 @@
 #' ---
 #' title: threshold of ensembles
 #' authors: mauricio vancine
-#' date: 2020-05-05
+#' date: 2020-06-19
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -13,20 +13,20 @@ library(raster)
 library(tidyverse)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
 setwd(path)
 dir()
 
 # import data -------------------------------------------------------------
 # occ
-occ <- readr::read_csv("02_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
+occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
-# binatization and area ---------------------------------------------------
+# binarize and area ---------------------------------------------------
 # directory
-setwd(path); dir.create("06_ensembles_thrs")
+setwd(path); dir.create("06_ensemble_thresholds")
 
-# binarizate and area
+# binarize and area
 for(i in occ$species %>% unique){
   
   # ensemble
@@ -37,14 +37,14 @@ for(i in occ$species %>% unique){
   setwd(path); setwd("05_ensembles")
   
   # presence and pseudo-absence
-  setwd(path); setwd(paste0("04_evaluation/", i))
-  pa <- purrr::map_dfr(dir(pattern = "pa_|pr_"), readr::read_csv) %>% 
+  setwd(path); setwd(paste0("04_evaluations/", i))
+  pa <- purrr::map_dfr(dir(pattern = "pa_|pp_"), col_types = cols(), readr::read_csv) %>% 
     dplyr::mutate(species = i)
   
   # import ensembles
-  setwd(path); setwd("05_ensembles")
+  setwd(path); setwd(paste0("05_ensembles/", i))
   ens <- dir(pattern = i) %>%
-    grep("ensemble", ., value = TRUE) %>% 
+    grep("ens_", ., value = TRUE) %>% 
     raster::stack()
   
   # extract
@@ -56,7 +56,7 @@ for(i in occ$species %>% unique){
   # combine
   pa_sui <- cbind(pa, sui = sui)
   
-  # maximum tss and kappa
+  # maximum tss
   max_tss <- ecospat::ecospat.max.tss(Pred = pa_sui$sui, Sp.occ = pa_sui$pa)
   
   # thrs
@@ -65,7 +65,7 @@ for(i in occ$species %>% unique){
     p10 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .1), 2) %>% as.numeric,
     p20 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .2), 2) %>% as.numeric,
     p30 = round(quantile(pa_sui[pa_sui$pa == 1, "sui"], .3), 2) %>% as.numeric,
-    max_tss = max_tss$max.threshold)
+    maxtss = max_tss$max.threshold)
   
   # tss
   tss <- list(
@@ -73,10 +73,10 @@ for(i in occ$species %>% unique){
     p10 = max_tss$table[max_tss$table$threshold == thrs$p10, 2],
     p20 = max_tss$table[max_tss$table$threshold == thrs$p20, 2],
     p30 = max_tss$table[max_tss$table$threshold == thrs$p30, 2],
-    max_tss = max_tss$max.TSS)
+    maxtss = max_tss$max.TSS)
   
   # directory
-  setwd(path); setwd("06_ensembles_thrs")
+  setwd(path); setwd("06_ensemble_thresholds"); dir.create(i); setwd(i)
   
   # area table
   table_thr_area <- NULL
@@ -99,7 +99,7 @@ for(i in occ$species %>% unique){
     # table
     table_thr_area <- rbind(table_thr_area, 
                             tibble::tibble(species = i,
-                                           scenario = sub(paste0(i, "_"), "", sub("ensemble_weighted_average_", "", names(ens_t[[k]]))),
+                                           scenario = sub(paste0(i, "_"), "", sub("ens_", "", names(ens_t[[k]]))),
                                            threshold = names(thrs)[j],
                                            threshold_val = thrs[[j]] %>% round(3),
                                            tss = tss[[j]]%>% round(3),
@@ -122,7 +122,7 @@ for(i in occ$species %>% unique){
     }
   
   # export area
-  readr::write_csv(table_thr_area, paste0("table_areas_thr_", i, ".csv"))
+  readr::write_csv(table_thr_area, paste0("00_table_areas_thr_", i, ".csv"))
   
 }
 

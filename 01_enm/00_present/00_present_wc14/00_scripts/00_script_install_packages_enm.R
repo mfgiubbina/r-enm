@@ -1,7 +1,7 @@
 #' ---
 #' title: install enm packages
 #' author: mauricio vancine
-#' date: 2020-06-16
+#' date: 2020-06-19
 #' ---
 
 # occurrences -------------------------------------------------------------
@@ -19,6 +19,9 @@ if(!require(CoordinateCleaner)) install.packages("CoordinateCleaner")
 if(!require(taxize)) install.packages("taxize")
 
 # variables ------------------------------------------------------
+# download
+if(!require(rnaturalearth)) install.packages("rnaturalearth")
+
 # manipulation and visualization
 if(!require(ggsn)) install.packages("ggsn")
 if(!require(raster)) install.packages("raster")
@@ -26,9 +29,7 @@ if(!require(rgdal)) install.packages("rgdal")
 if(!require(rgeos)) install.packages("rgeos")
 if(!require(RColorBrewer)) install.packages("RColorBrewer")
 if(!require(sf)) install.packages("sf")
-
-# download
-if(!require(rnaturalearth)) install.packages("rnaturalearth")
+if(!require(wesanderson)) devtools::install_github("karthik/wesanderson")
 
 # selection - correlation
 if(!require(corrr)) install.packages("corrr")
@@ -48,6 +49,10 @@ if(!require(kernlab)) install.packages("e1071")
 if(!require(randomForest)) install.packages("randomForest")
 
 # maxent
-if(!require(rJava)) install.packages("rJava") # download java
+#' download java
+#' windows: https://www.java.com/
+#' linux: sudo apt install -y default-jre default-jdk
+
+if(!require(rJava)) install.packages("rJava") 
 
 # end ---------------------------------------------------------------------

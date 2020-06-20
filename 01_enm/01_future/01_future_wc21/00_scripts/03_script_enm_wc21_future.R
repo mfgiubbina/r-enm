@@ -1,7 +1,7 @@
 #' ---
 #' title: enm - multiple algorithm
 #' authors: matheus lima-ribeiro, mauricio vancine
-#' date: 2020-06-17
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -60,7 +60,8 @@ var_p
 # future
 var_f <- dir(pattern = "tif$") %>% 
   stringr::str_subset("future") %>% 
-  raster::stack()
+  raster::stack() %>% 
+  raster::brick()
 names(var_f) <- stringr::str_replace(names(var_f), "wc21_55km_future_", "")
 names(var_f)
 var_f
@@ -77,9 +78,10 @@ setwd(path); dir.create("03_enm"); setwd("03_enm")
 # parameters
 replica <- 5
 partition <- .7
+bkg_n <- 1e5
 
 # enms
-for(i in occ$species %>% unique){
+for(i in occ$species %>% unique){}
   
   # directory
   dir.create(i); setwd(i)
@@ -196,8 +198,8 @@ for(i in occ$species %>% unique){
       # model predict future
       fut_var <- names(var_f) %>% 
         stringr::str_split("_bio") %>% 
-        purrr::map(., 1)
-      fut_var
+        purrr::map(., 1) %>% 
+        unique
       
       for(f in fut_var){
         
@@ -205,8 +207,7 @@ for(i in occ$species %>% unique){
         print(f)
         
         # select variables
-        var_f_sel <- var_f[[grep(f, names(var_f), value = TRUE)]] %>% 
-          raster::brick()
+        var_f_sel <- var_f[[grep(f, names(var_f), value = TRUE)]]
         
         # names
         names(var_f_sel) <- names(var_p)
@@ -255,19 +256,19 @@ for(i in occ$species %>% unique){
   
   # export evaluations
   # directory
-  setwd(path); dir.create("04_evaluation"); setwd("04_evaluation")
+  setwd(path); dir.create("04_evaluations"); setwd("04_evaluations")
   dir.create(i); setwd(i)
   
   # export evaluations
-  readr::write_csv(eval_species, paste0("00_evaluation_", i, ".csv"))
+  readr::write_csv(eval_species, paste0("00_table_eval_", i, ".csv"))
   
   # export presence and pseudo-absence points
   pr_specie %>% 
     dplyr::mutate(pa = 1) %>% 
-    readr::write_csv(paste0("pr_", i, ".csv"))
+    readr::write_csv(paste0("01_table_pp_", i, ".csv"))
   pa_specie %>% 
     dplyr::mutate(pa = 0) %>%
-    readr::write_csv(paste0("pa_", i, ".csv"))
+    readr::write_csv(paste0("01_table_pa_", i, ".csv"))
   
   # directory
   setwd(path); setwd("03_enm")

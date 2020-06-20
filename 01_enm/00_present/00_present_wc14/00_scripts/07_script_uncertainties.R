@@ -1,7 +1,7 @@
 #' ---
 #' title: ensemble - uncertainties
-#' authors: mauricio vancine
-#' date: 2020-06-16
+#' author: mauricio vancine
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -12,10 +12,11 @@ rm(list = ls())
 library(raster)
 library(tidyverse)
 library(vegan)
+library(progress)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-# raster::beginCluster(n = parallel::detectCores() - 1)
+raster::beginCluster(n = parallel::detectCores() - 1)
 
 # directory
 path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
@@ -24,10 +25,10 @@ dir()
 
 # evaluations -------------------------------------------------------------
 # directory
-setwd("04_evaluation")
+setwd("04_evaluations")
 
 # import evaluations
-eva <- dir(pattern = "00_evaluation_", recursive = TRUE) %>% 
+eva <- dir(pattern = "00_table_eval", recursive = TRUE) %>% 
   purrr::map_dfr(., col_types = cols(), readr::read_csv)
 eva
 
@@ -61,7 +62,7 @@ for(i in eva$species %>% unique){
     dplyr::pull()
   
   # directory
-  setwd(path); setwd(paste0("03_enm/", i))
+  setwd(path); setwd(paste0("03_enms/", i))
   
   # import
   enm_i_r <- dir(pattern = ".tif$") %>% 
@@ -166,11 +167,11 @@ for(i in eva$species %>% unique){
                      mean = mean(values) %>% round(3),
                      sd = sd(values) %>% round(3))
   
-  readr::write_csv(table_resume, paste0("uncertainties_mean_squares_anova_", i, ".csv"))
+  readr::write_csv(table_resume, paste0("00_table_unc_", i, ".csv"))
   
   # export
   raster::writeRaster(x = unc, 
-                      filename = paste0("uncertainties_", names(unc), "_", i), 
+                      filename = paste0("unc_", names(unc), "_", i), 
                       bylayer = TRUE,
                       format = "GTiff", 
                       options = c("COMPRESS=DEFLATE"), 

@@ -4,7 +4,7 @@
 #' date: 2020-05-18
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -15,7 +15,6 @@ library(vegan)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-# raster::beginCluster(n = parallel::detectCores() - 1)
 
 # directory
 path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"

@@ -1,7 +1,7 @@
 #' ---
 #' title: sdm - multiple method
 #' authors: matheus lima-ribeiro, mauricio vancine
-#' date: 2020-06-16
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -23,7 +23,7 @@ library(tidyverse)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-# raster::beginCluster(n = parallel::detectCores() - 1)
+raster::beginCluster(n = parallel::detectCores() - 1)
 
 # maxent
 if(file.exists(paste0(system.file(package = "dismo"), "/java/maxent.jar"))){
@@ -59,8 +59,8 @@ raster::plot(var[[1]])
 points(occ$longitude, occ$latitude, pch = 20, col = as.factor(occ$species))
 
 # enms --------------------------------------------------------------------
-# diretory
-setwd(path); dir.create("03_enm"); setwd("03_enm")
+# directory
+setwd(path); dir.create("03_enms"); setwd("03_enms")
 
 # parameters
 replica <- 5
@@ -212,22 +212,22 @@ for(i in occ$species %>% unique){
   
   # export evaluations
   # directory
-  setwd(path); dir.create("04_evaluation"); setwd("04_evaluation")
+  setwd(path); dir.create("04_evaluations"); setwd("04_evaluations")
   dir.create(i); setwd(i)
   
   # export evaluations
-  readr::write_csv(eval_species, paste0("00_evaluation_", i, ".csv"))
-
+  readr::write_csv(eval_species, paste0("00_table_eval_", i, ".csv"))
+  
   # export presence and pseudo-absence points
   pr_specie %>% 
     dplyr::mutate(pa = 1) %>% 
-    readr::write_csv(paste0("pr_", i, ".csv"))
+    readr::write_csv(paste0("01_table_pp_", i, ".csv"))
   pa_specie %>% 
     dplyr::mutate(pa = 0) %>%
-    readr::write_csv(paste0("pa_", i, ".csv"))
+    readr::write_csv(paste0("01_table_pa_", i, ".csv"))
   
   # directory
-  setwd(path); setwd("03_enm")
+  setwd(path); setwd("03_enms")
   
 } # ends for "i"
 

@@ -1,7 +1,7 @@
 #' ---
 #' title: occ - download and clean
 #' author: mauricio vancine
-#' date: 2019-06-16
+#' date: 2019-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -35,7 +35,7 @@ sp_list <- readr::read_csv("00_species_list/00_species_list.csv") %>%
   dplyr::arrange(species) %>% 
   dplyr::pull()
 sp_list
-  
+
 # bases for download
 db <- c("gbif", "bison", "inat", "ebird", "ecoengine", "vertnet", "idigbio", "obis", "ala")
 db
@@ -181,7 +181,7 @@ readr::write_csv(occ_data, paste0("occ_integrated_", lubridate::today(), ".csv")
 occ_data_vector <- occ_data %>% 
   tidyr::drop_na(longitude, latitude) %>% 
   sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-  
+
 tm_shape(li, bbox = occ_data_vector) +
   tm_polygons() +
   tm_shape(occ_data_vector) +
@@ -200,36 +200,39 @@ gnr_taxa <- NULL
 gnr_total <- NULL
 
 for(i in sp_list){
-
+  
+  # info
+  print(i)
+  
   # gnr names
   gnr <- taxize::gnr_resolve(i)
-
+  
   # combine
   gnr_total <- rbind(gnr_total, gnr)
   
   # adjust names
   gnr_taxa_i <- gnr %>% 
-  dplyr::mutate(species = i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_")) %>% 
-  dplyr::select(species, matched_name) %>%
-  dplyr::bind_rows(tibble::tibble(species = i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_"),
-                                  matched_name = c(i, 
-                                                   i %>% stringr::str_to_title(),
-                                                   i %>% stringr::str_to_lower(),
-                                                   i %>% stringr::str_to_upper()))) %>% 
-  dplyr::distinct() %>% 
-  dplyr::arrange(matched_name)
-
+    dplyr::mutate(species = i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_")) %>% 
+    dplyr::select(species, matched_name) %>%
+    dplyr::bind_rows(tibble::tibble(species = i %>% stringr::str_to_lower() %>% stringr::str_replace(" ", "_"),
+                                    matched_name = c(i, 
+                                                     i %>% stringr::str_to_title(),
+                                                     i %>% stringr::str_to_lower(),
+                                                     i %>% stringr::str_to_upper()))) %>% 
+    dplyr::distinct() %>% 
+    dplyr::arrange(matched_name)
+  
   # combine
   gnr_taxa <- rbind(gnr_taxa, gnr_taxa_i)
-
-  }
+  
+}
 
 # confer
 gnr_taxa
 gnr_total
 
 # export gnr total
-readr::write_csv(gnr_total, paste0("gnr_total_", lubridate::today(), ".csv"))
+readr::write_csv(gnr_total, paste0("table_gnr_total_", lubridate::today(), ".csv"))
 
 # confer data
 occ_data %>%
@@ -286,7 +289,7 @@ occ_data_taxa_date %>%
   theme(legend.text = element_text(face = "italic"),
         legend.position = "none",
         strip.text = element_text(size = 10, face = "italic"))
-ggsave(filename = "hist_date.png", wi = 20, he = 15, un = "cm", dpi = 300)
+ggsave(filename = "plot_occ_date.png", wi = 20, he = 15, un = "cm", dpi = 300)
 
 # map
 occ_data_taxa_date_vector <- occ_data_taxa_date %>% 
@@ -466,7 +469,7 @@ readr::write_csv(occ_data_taxa_date_bias_limit_spatial,
                  paste0("occ_clean_taxa_date_bias_limit_spatial.csv"))
 
 readr::write_csv(occ_filter, 
-                 paste0("occ_filter_summary.csv"))
+                 paste0("table_occ_filter_summary.csv"))
 
 # -------------------------------------------------------------------------
 

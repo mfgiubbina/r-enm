@@ -1,7 +1,7 @@
 #' ---
-#' title: threshold of ensembles
+#' title: ensembles thresholds
 #' authors: mauricio vancine
-#' date: 2020-06-16
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -22,11 +22,11 @@ dir()
 occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
-# binatization and area ---------------------------------------------------
+# binarize and calculate area ---------------------------------------------
 # directory
-setwd(path); dir.create("06_ensembles_thrs")
+setwd(path); dir.create("06_ensemble_thresholds")
 
-# binarizate and area
+# binarize and calculate area
 for(i in occ$species %>% unique){
   
   # ensemble
@@ -37,14 +37,14 @@ for(i in occ$species %>% unique){
   setwd(path); setwd("05_ensembles")
   
   # presence and pseudo-absence
-  setwd(path); setwd(paste0("04_evaluation/", i))
-  pa <- purrr::map_dfr(dir(pattern = "pa_|pr_"), col_types = cols(), readr::read_csv) %>% 
+  setwd(path); setwd(paste0("04_evaluations/", i))
+  pa <- purrr::map_dfr(dir(pattern = "pa_|pp_"), col_types = cols(), readr::read_csv) %>% 
     dplyr::mutate(species = i)
   
   # import ensembles
   setwd(path); setwd(paste0("05_ensembles/", i))
   ens <- dir(pattern = paste0(i, ".tif$")) %>%
-    grep("ensemble", ., value = TRUE) %>% 
+    grep("ens", ., value = TRUE) %>% 
     raster::raster()
   
   # extract
@@ -76,7 +76,7 @@ for(i in occ$species %>% unique){
     maxtss = max_tss$max.TSS)
   
   # directory
-  setwd(path); setwd("06_ensembles_thrs"); dir.create(i); setwd(i)
+  setwd(path); setwd("06_ensemble_thresholds"); dir.create(i); setwd(i)
   
   # area table
   table_thr_area <- NULL

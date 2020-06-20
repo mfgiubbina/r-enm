@@ -1,7 +1,7 @@
 #' ---
-#' title: sdm - multiple method
+#' title: enm - multiple algorithm
 #' authors: matheus lima-ribeiro, mauricio vancine
-#' date: 2020-06-16
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -32,35 +32,48 @@ if(file.exists(paste0(system.file(package = "dismo"), "/java/maxent.jar"))){
   print(paste0("File maxent.jar not found! Downloading in ", paste0(system.file(package = "dismo"), "/java")))
   setwd(paste0(system.file(package = "dismo"), "/java"))
   download.file("https://biodiversityinformatics.amnh.org/open_source/maxent/maxent.php?op=download",
-                "maxent.zip", mode = "wb")
+                "maxent.zip")
   unzip("maxent.zip")}
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
 setwd(path)
 dir()
 
 # import data -------------------------------------------------------------
-# occ
+# occurrences
 occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
-# var
+# variables
 setwd(path); setwd("02_variables/04_processed_correlation"); dir()
-var <- dir(pattern = "tif$") %>% 
+
+# present
+var_p <- dir(pattern = "tif$") %>%
+  stringr::str_subset("present") %>% 
   raster::stack() %>% 
   raster::brick()
-names(var) <- stringr::str_replace(names(var), "var_wc14_55km_", "")
-names(var)
-var
+names(var_p) <- stringr::str_replace(names(var_p), "var_wc14_55km_present_", "")
+names(var_p)
+var_p
 
-raster::plot(var)
-raster::plot(var$bio02)
+# future
+var_f <- dir(pattern = "tif$") %>% 
+  stringr::str_subset("future") %>% 
+  raster::stack() %>% 
+  raster::brick()
+names(var_f) <- stringr::str_replace(names(var_f), "var_wc14_55km_future_", "")
+names(var_f)
+var_f
+
+# maps
+plot(var_p)
+plot(var_f[[1]])
 points(occ$longitude, occ$latitude, pch = 20, col = as.factor(occ$species))
 
 # enms --------------------------------------------------------------------
-# diretory
-setwd(path); dir.create("03_enm"); setwd("03_enm")
+# directory
+setwd(path); dir.create("03_enms"); setwd("03_enms")
 
 # parameters
 replica <- 5
@@ -85,12 +98,12 @@ for(i in occ$species %>% unique){
     dplyr::select(longitude, latitude) %>% 
     dplyr::mutate(id = seq(nrow(.)))
   
-  pa_specie <- dismo::randomPoints(mask = var, n = nrow(pr_specie)) %>% 
+  pa_specie <- dismo::randomPoints(mask = var_p, n = nrow(pr_specie)) %>% 
     tibble::as_tibble() %>%
     dplyr::rename(longitude = x, latitude = y) %>% 
     dplyr::mutate(id = seq(nrow(.)))
   
-  bkg <- dismo::randomPoints(mask = var, n = bkg_n, warn = FALSE)
+  bkg <- dismo::randomPoints(mask = var_p, n = bkg_n, warn = FALSE)
   
   # ------------------------------------------------------------------------
   
@@ -112,15 +125,15 @@ for(i in occ$species %>% unique){
       dplyr::pull()
     
     # train and test data
-    train_pa <- dismo::prepareData(x = var, 
+    train_pa <- dismo::prepareData(x = var_p, 
                                    p = pr_specie %>% dplyr::filter(id %in% pr_sample_train) %>% dplyr::select(longitude, latitude), 
                                    b = pa_specie %>% dplyr::filter(id %in% pa_sample_train) %>% dplyr::select(longitude, latitude)) %>% na.omit
     
-    train_pb <- dismo::prepareData(x = var, 
+    train_pb <- dismo::prepareData(x = var_p, 
                                    p = pr_specie %>% dplyr::filter(id %in% pr_sample_train) %>% dplyr::select(longitude, latitude), 
                                    b = bkg) %>% na.omit
     
-    test <- dismo::prepareData(x = var, 
+    test <- dismo::prepareData(x = var_p, 
                                p = pr_specie %>% dplyr::filter(!id %in% pr_sample_train) %>% dplyr::select(longitude, latitude), 
                                b = pa_specie %>% dplyr::filter(!id %in% pa_sample_train) %>% dplyr::select(longitude, latitude)) %>% na.omit
     
@@ -130,7 +143,7 @@ for(i in occ$species %>% unique){
     # information
     print(paste("Models fitting to", i, "replica", r, "of", replica))
     
-    # methods
+    # algorithms
     # presence-only - envelope
     BIO <- dismo::bioclim(x = train_pa %>% dplyr::filter(pb == 1) %>% dplyr::select(-pb))
     
@@ -161,24 +174,55 @@ for(i in occ$species %>% unique){
                 svm = SVM, 
                 maxent = MAX)
     
-    # ------------------------------------------------------------------------
-    
+    # -------------------------------------------------------------------------
+
     # predict
     for(a in seq(fit)){
       
       # information
-      print(paste("Model predict method", fit[a] %>% names))
+      print(paste("Model predict algorithm", fit[a] %>% names))
+      print("present")
       
-      # model predict
-      model_predict <- raster::predict(var, fit[[a]], progress = "text")
+      # model predict present
+      model_predict_p <- raster::predict(var_p, fit[[a]], progress = "text")
       
-      # model export
-      raster::writeRaster(x = model_predict, 
-                          filename = paste0("enm_", i, "_", fit[a] %>% names, "_r", ifelse(r < 10, paste0("0", r), r)), 
+      # model export present
+      raster::writeRaster(x = model_predict_p, 
+                          filename = paste0("enm_", i, "_", fit[a] %>% names, "_r", ifelse(r < 10, paste0("0", r), r), "_present"), 
                           format = "GTiff", 
                           options = c("COMPRESS=DEFLATE"), 
-                          progress = "text",
                           overwrite = TRUE)
+      
+      # ------------------------------------------------------------------------
+      
+      # model predict future
+      fut_var <- names(var_f) %>% 
+        stringr::str_split("_bio") %>% 
+        purrr::map(., 1) %>% 
+        unique
+      
+      for(f in fut_var){
+        
+        # information
+        print(f)
+        
+        # select variables
+        var_f_sel <- var_f[[grep(f, names(var_f), value = TRUE)]]
+        
+        # names
+        names(var_f_sel) <- names(var_p)
+        
+        # model predict future
+        model_predict_f <- dismo::predict(var_f_sel, fit[[a]], progress = "text")
+        
+        # model export present
+        raster::writeRaster(x = model_predict_f, 
+                            filename = paste0("enm_", i, "_", fit[a] %>% names, "_r", ifelse(r < 10, paste0("0", r), r), "_", f), 
+                            format = "GTiff", 
+                            options = c("COMPRESS=DEFLATE"), 
+                            overwrite = TRUE)
+        
+      } # ends for "f"
       
       # ------------------------------------------------------------------------
       
@@ -212,22 +256,22 @@ for(i in occ$species %>% unique){
   
   # export evaluations
   # directory
-  setwd(path); dir.create("04_evaluation"); setwd("04_evaluation")
+  setwd(path); dir.create("04_evaluations"); setwd("04_evaluations")
   dir.create(i); setwd(i)
   
   # export evaluations
-  readr::write_csv(eval_species, paste0("00_evaluation_", i, ".csv"))
-
+  readr::write_csv(eval_species, paste0("00_table_eval_", i, ".csv"))
+  
   # export presence and pseudo-absence points
   pr_specie %>% 
     dplyr::mutate(pa = 1) %>% 
-    readr::write_csv(paste0("pr_", i, ".csv"))
+    readr::write_csv(paste0("01_table_pp_", i, ".csv"))
   pa_specie %>% 
     dplyr::mutate(pa = 0) %>%
-    readr::write_csv(paste0("pa_", i, ".csv"))
+    readr::write_csv(paste0("01_table_pa_", i, ".csv"))
   
   # directory
-  setwd(path); setwd("03_enm")
+  setwd(path); setwd("03_enms")
   
 } # ends for "i"
 

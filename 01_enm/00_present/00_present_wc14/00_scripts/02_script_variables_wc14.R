@@ -1,7 +1,7 @@
 #' ---
-#' title: variables - download, adjust extension and resolution, and correlation
+#' title: variables - download, adjust extent and resolution, and correlation
 #' author: mauricio vancine
-#' date: 2019-06-16
+#' date: 2019-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -12,14 +12,12 @@ rm(list = ls())
 library(geobr)
 library(GGally)
 library(raster)
-library(rvest)
 library(sf)
 library(tidyverse)
 library(tmap)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
-raster::beginCluster(n = parallel::detectCores() - 1)
 
 # directory
 path <- "/home/mude/data/github/r-enm/01_enm/00_present/00_present_wc14/"
@@ -72,11 +70,11 @@ tm_shape(var$bio01/10) +
   tm_raster(palette = "-Spectral") +
   tm_layout(legend.position = c("left", "bottom"))
 
-# extention and scale -----------------------------------------------------
+# extent and scale -----------------------------------------------------
 # directory
 setwd(path); dir.create("02_processed"); setwd("02_processed")
 
-# adust extention and resolution
+# adjust extent and resolution
 var_li <- raster::crop(x = var, y = li) %>% 
   raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
@@ -117,14 +115,14 @@ tibble::glimpse(var_da)
 cor_table <- corrr::correlate(var_da, method = "spearman") 
 cor_table
 
-# preparate table
+# prepare table
 cor_table_summary <- cor_table %>% 
   corrr::shave() %>%
   corrr::fashion()
 cor_table_summary
 
 # export
-readr::write_csv(cor_table_summary, "correlacao.csv")
+readr::write_csv(cor_table_summary, "table_correlacao.csv")
 
 # select variables
 # correlated variables
@@ -158,10 +156,10 @@ var_ggpairs <- var_da_cor07 %>%
           axisLabels = "none") +
   theme_bw()
 var_ggpairs
-ggsave(filename = "correlation_plot.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
+ggsave(filename = "plot_correlation.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
 
 # create variables --------------------------------------------------------
-# dictory
+# directory
 setwd(path); dir.create("04_processed_correlation"); setwd("04_processed_correlation")
 getwd()
 

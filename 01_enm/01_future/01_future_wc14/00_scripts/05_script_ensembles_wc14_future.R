@@ -1,7 +1,7 @@
 #' ---
-#' title: ensemble - weighted average and uncertainties - hierarchical anova
+#' title: ensemble - weighted average
 #' authors: mauricio vancine
-#' date: 2020-06-16
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -24,10 +24,10 @@ dir()
 
 # import evaluates --------------------------------------------------------
 # directory
-setwd("04_evaluation")
+setwd("04_evaluations")
 
 # import evaluations
-eva <- dir(pattern = "00_evaluation_", recursive = TRUE) %>% 
+eva <- dir(pattern = "00_table_eval_", recursive = TRUE) %>% 
   purrr::map_dfr(., col_types = cols(), readr::read_csv)
 eva
 
@@ -41,7 +41,7 @@ setwd(path); dir.create("05_ensembles")
 # ensemble
 for(i in eva$species %>% unique){
   
-  # ensemeble ---------------------------------------------------------------
+  # ensemble ---------------------------------------------------------------
   # information
   print(paste("Ensemble to", i))
   
@@ -62,7 +62,7 @@ for(i in eva$species %>% unique){
     dplyr::pull()
   
   # directory
-  setwd(path); setwd(paste0("03_enm/", i))
+  setwd(path); setwd(paste0("03_enms/", i))
   
   # import
   enm_i_r <- dir(pattern = ".tif$") %>% 
@@ -70,7 +70,7 @@ for(i in eva$species %>% unique){
     raster::stack()
   names(enm_i_r) <- stringr::str_replace(names(enm_i_r), "_present", "__present")
   
-  # infos
+  # info
   gcm <- stringr::str_split_fixed(names(enm_i_r), "_", 8)[, 6] %>% 
     stringi::stri_remove_empty() %>% 
     unique
@@ -113,7 +113,7 @@ for(i in eva$species %>% unique){
         
         enm_i_r_gcm_met_cen_t <- enm_i_r_gcm_met[[grep(c, names(enm_i_r_gcm_met))]]
         
-        enm_i_r_gcm_met_cen <- enm_i_r_gcm_met_cen_t %>% 
+        enm_i_r_gcm_met_cen <- enm_i_r_gcm_met_cen_t %>%
           raster::values() %>% 
           tibble::as_tibble() %>% 
           dplyr::rename_all(~(paste0("enm_", i, "_", m, "_", 
@@ -164,7 +164,7 @@ for(i in eva$species %>% unique){
     
     # export
     raster::writeRaster(x = ens, 
-                        filename = paste0("ensemble_weighted_average_", i, "_", c), 
+                        filename = paste0("ens_", i, "_", c), 
                         format = "GTiff", 
                         options = c("COMPRESS=DEFLATE"), 
                         progress = "text",

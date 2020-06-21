@@ -1,7 +1,7 @@
 #' ---
-#' title: variables - download, adjust extension and resolution, and correlation to future
+#' title: variables - download, adjust extent and resolution, and correlation to future
 #' author: mauricio vancine
-#' date: 2020-06-17
+#' date: 2020-06-20
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -77,7 +77,7 @@ url <- "https://worldclim.org/data/cmip6/cmip6_clim10m.html" %>%
   rvest::html_nodes("a") %>% 
   rvest::html_attr("href") %>% 
   stringr::str_subset("bioc") %>% 
-  stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1|GFDL-ESM4|IPSL-CM6A-LR|MIROC-ES2L|MRI-ESM2-0", negate = TRUE) %>% 
+  stringr::str_subset("CNRM-ESM2-1|CanESM5|MIROC6") %>% 
   stringr::str_subset("ssp126", negate = TRUE)
 url
 
@@ -86,7 +86,7 @@ destfiles <- "https://worldclim.org/data/cmip6/cmip6_clim10m.html" %>%
   rvest::html_nodes("a") %>% 
   rvest::html_attr("href") %>% 
   stringr::str_subset("bioc") %>% 
-  stringr::str_subset("BCC-CSM2-MR|CNRM-CM6-1|GFDL-ESM4|IPSL-CM6A-LR|MIROC-ES2L|MRI-ESM2-0", negate = TRUE) %>% 
+  stringr::str_subset("CNRM-ESM2-1|CanESM5|MIROC6") %>%
   stringr::str_subset("ssp126", negate = TRUE) %>% 
   stringr::str_split(pattern = "[/]", simplify = TRUE) %>% 
   tibble::as_tibble() %>% 
@@ -135,11 +135,11 @@ names(var_f) <- names(var_f) %>%
 names(var_f)
 var_f
 
-# adjust extension and resolution ------------------------------------------
+# adjust extent and resolution ------------------------------------------
 # directory
 setwd(path); dir.create("02_processed"); setwd("02_processed")
 
-# adjust extension to mask and resolution - present
+# adjust extent to mask and resolution - present
 var_p_li <- raster::crop(x = var_p, y = li) %>% 
   raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
@@ -147,7 +147,7 @@ var_p_li
 
 plot(var_p_li[[1]])
 
-# adjust extension to mask and resolution - future
+# adjust extent to mask and resolution - future
 var_f_li <- raster::crop(x = var_f, y = li) %>% 
   raster::mask(li) %>% 
   raster::aggregate(., fact = .5/res(.)[1])
@@ -191,14 +191,14 @@ dplyr::glimpse(var_p_da)
 cor_table <- corrr::correlate(var_p_da, method = "spearman") 
 cor_table
 
-# preparate table
+# prepare table
 cor_table_summary <- cor_table %>% 
   corrr::shave() %>%
   corrr::fashion()
 cor_table_summary
 
 # export
-readr::write_csv(cor_table_summary, "var_correlation.csv")
+readr::write_csv(cor_table_summary, "var_table_correlation.csv")
 
 # select variables
 # correlated variables

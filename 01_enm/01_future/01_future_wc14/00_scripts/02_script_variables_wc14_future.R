@@ -159,14 +159,14 @@ dplyr::glimpse(var_p_da)
 cor_table <- corrr::correlate(var_p_da, method = "spearman") 
 cor_table
 
-# preparate table
+# prepare table
 cor_table_summary <- cor_table %>% 
   corrr::shave() %>%
   corrr::fashion()
 cor_table_summary
 
 # export
-readr::write_csv(cor_table_summary, "table_correlation.csv")
+readr::write_csv(cor_table_summary, "var_table_correlation.csv")
 
 # select variables
 # correlated variables
@@ -199,7 +199,7 @@ var_ggpairs <- var_da_cor07 %>%
           axisLabels = "none") +
   theme_bw()
 var_ggpairs
-ggsave(filename = "var_correlation_plot.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
+ggsave(filename = "var_plot_correlation.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
 
 # export variables --------------------------------------------------------
 # directory

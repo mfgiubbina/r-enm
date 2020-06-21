@@ -116,7 +116,7 @@ for(i in occ$species %>% unique){
   }
   
   # export area
-  readr::write_csv(table_thr_area, paste0("00_table_areas_thr_", i, ".csv"))
+  readr::write_csv(table_thr_area, paste0("00_ens_thr_table_areas_", i, ".csv"))
   
 }
 

@@ -28,7 +28,7 @@ dir()
 setwd("04_evaluations")
 
 # import evaluations
-eva <- dir(pattern = "00_table_eval_", recursive = TRUE) %>% 
+eva <- dir(pattern = "00_eval_table_", recursive = TRUE) %>% 
   purrr::map_dfr(., readr::read_csv)
 eva
 
@@ -193,7 +193,7 @@ for(i in eva$species %>% unique){
     }
     
     # column names
-    colnames(sui_ms) <- c("methods", "gcms", "methods_gcms", "residuals")
+    colnames(sui_ms) <- c("methods", "gcms", "methodsgcms", "residuals")
     
     # proportion of variance explained by each component
     sui_ms_sum <- apply(sui_ms, 1, sum)
@@ -211,7 +211,7 @@ for(i in eva$species %>% unique){
     }
     
     # names
-    names(unc) <- c("methods", "gcms", "methods_gcms", "residuals")
+    names(unc) <- c("methods", "gcms", "methodsgcms", "residuals")
     plot(unc)
     
     # directory

@@ -1,10 +1,10 @@
 #' ---
 #' title: threshold of ensembles
 #' authors: mauricio vancine
-#' date: 2020-06-18
+#' date: 2020-06-20
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -22,11 +22,11 @@ dir()
 occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
-# binatization and area ---------------------------------------------------
+# binarize and area ---------------------------------------------------
 # directory
-setwd(path); dir.create("06_ensembles_thrs")
+setwd(path); dir.create("06_ensemble_thresholds")
 
-# binarizate and area
+# binarize and area
 for(i in occ$species %>% unique){
   
   # ensemble
@@ -37,14 +37,14 @@ for(i in occ$species %>% unique){
   setwd(path); setwd("05_ensembles")
   
   # presence and pseudo-absence
-  setwd(path); setwd(paste0("04_evaluation/", i))
-  pa <- purrr::map_dfr(dir(pattern = "pa_|pr_"), col_types = cols(), readr::read_csv) %>% 
+  setwd(path); setwd(paste0("04_evaluations/", i))
+  pa <- purrr::map_dfr(dir(pattern = "pa_|pp_"), col_types = cols(), readr::read_csv) %>% 
     dplyr::mutate(species = i)
   
   # import ensembles
   setwd(path); setwd(paste0("05_ensembles/", i))
   ens <- dir(pattern = i) %>%
-    grep("ensemble", ., value = TRUE) %>% 
+    grep("ens_", ., value = TRUE) %>% 
     raster::stack()
   
   # extract
@@ -76,7 +76,7 @@ for(i in occ$species %>% unique){
     maxtss = max_tss$max.TSS)
   
   # directory
-  setwd(path); setwd("06_ensembles_thrs"); dir.create(i); setwd(i)
+  setwd(path); setwd("06_ensemble_thresholds"); dir.create(i); setwd(i)
   
   # area table
   table_thr_area <- NULL
@@ -92,37 +92,37 @@ for(i in occ$species %>% unique){
     
     # area
     for(k in 1:nlayers(ens_t)){
-    
-    area <- tapply(raster::area(ens_t[[k]]), raster::values(ens_t[[k]]), sum)
-    area
-    
-    # table
-    table_thr_area <- rbind(table_thr_area, 
-                            tibble::tibble(species = i,
-                                           scenario = sub(paste0(i, "_"), "", sub("ensemble_weighted_average_", "", names(ens_t[[k]]))),
-                                           threshold = names(thrs)[j],
-                                           threshold_val = thrs[[j]] %>% round(3),
-                                           tss = tss[[j]]%>% round(3),
-                                           area_total_km2 = sum(area) %>% round(3),
-                                           presence_km2 = area[2] %>% round(3),
-                                           presence_por = round(area[2]/sum(area)*100, 2),
-                                           absence_km2 = area[1] %>% round(3),
-                                           absence_por = round(area[1]/sum(area)*100, 2)))
-    
-    # ens
-    raster::writeRaster(x = ens_t[[k]], 
-                        filename = paste0(names(ens_t[[k]]), "_thr_", names(thrs)[j]), 
-                        format = "GTiff", 
-                        options = c("COMPRESS=DEFLATE"), 
-                        overwrite = TRUE)
-   
+      
+      area <- tapply(raster::area(ens_t[[k]]), raster::values(ens_t[[k]]), sum)
+      area
+      
+      # table
+      table_thr_area <- rbind(table_thr_area, 
+                              tibble::tibble(species = i,
+                                             scenario = sub(paste0(i, "_"), "", sub("ens_", "", names(ens_t[[k]]))),
+                                             threshold = names(thrs)[j],
+                                             threshold_val = thrs[[j]] %>% round(3),
+                                             tss = tss[[j]]%>% round(3),
+                                             area_total_km2 = sum(area) %>% round(3),
+                                             presence_km2 = area[2] %>% round(3),
+                                             presence_por = round(area[2]/sum(area)*100, 2),
+                                             absence_km2 = area[1] %>% round(3),
+                                             absence_por = round(area[1]/sum(area)*100, 2)))
+      
+      # ens
+      raster::writeRaster(x = ens_t[[k]], 
+                          filename = paste0(names(ens_t[[k]]), "_thr_", names(thrs)[j]), 
+                          format = "GTiff", 
+                          options = c("COMPRESS=DEFLATE"), 
+                          overwrite = TRUE)
+      
     }
-     
-  
-    }
+    
+    
+  }
   
   # export area
-  readr::write_csv(table_thr_area, paste0("00_table_areas_thr_", i, ".csv"))
+  readr::write_csv(table_thr_area, paste0("00_ens_table_areas_thr_", i, ".csv"))
   
 }
 

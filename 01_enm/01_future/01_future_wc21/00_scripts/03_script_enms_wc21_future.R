@@ -1,7 +1,7 @@
 #' ---
 #' title: enm - multiple algorithm
 #' authors: matheus lima-ribeiro, mauricio vancine
-#' date: 2020-06-19
+#' date: 2020-06-20
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -53,7 +53,7 @@ var_p <- dir(pattern = "tif$") %>%
   stringr::str_subset("present") %>% 
   raster::stack() %>% 
   raster::brick()
-names(var_p) <- stringr::str_replace(names(var_p), "wc21_55km_present_", "")
+names(var_p) <- stringr::str_replace(names(var_p), "var_wc21_55km_present_", "")
 names(var_p)
 var_p
 
@@ -62,7 +62,7 @@ var_f <- dir(pattern = "tif$") %>%
   stringr::str_subset("future") %>% 
   raster::stack() %>% 
   raster::brick()
-names(var_f) <- stringr::str_replace(names(var_f), "wc21_55km_future_", "")
+names(var_f) <- stringr::str_replace(names(var_f), "var_wc21_55km_future_", "")
 names(var_f)
 var_f
 
@@ -73,7 +73,7 @@ points(occ$longitude, occ$latitude, pch = 20, col = as.factor(occ$species))
 
 # enms --------------------------------------------------------------------
 # directory
-setwd(path); dir.create("03_enm"); setwd("03_enm")
+setwd(path); dir.create("03_enms2"); setwd("03_enms2")
 
 # parameters
 replica <- 5
@@ -81,7 +81,7 @@ partition <- .7
 bkg_n <- 1e5
 
 # enms
-for(i in occ$species %>% unique){}
+for(i in occ$species %>% unique){
   
   # directory
   dir.create(i); setwd(i)
@@ -231,7 +231,7 @@ for(i in occ$species %>% unique){}
                               a = test %>% dplyr::filter(pb == 0) %>% dplyr::select(-pb), 
                               model = fit[[a]])
       
-      # indices
+      # indexes
       id_eval_spec_sens <- which(eval@t == dismo::threshold(eval, "spec_sens"))
       tss_spec_sens <- eval@TPR[id_eval_spec_sens] + eval@TNR[id_eval_spec_sens] - 1
       
@@ -260,18 +260,18 @@ for(i in occ$species %>% unique){}
   dir.create(i); setwd(i)
   
   # export evaluations
-  readr::write_csv(eval_species, paste0("00_table_eval_", i, ".csv"))
+  readr::write_csv(eval_species, paste0("00_eval_table_", i, ".csv"))
   
   # export presence and pseudo-absence points
   pr_specie %>% 
     dplyr::mutate(pa = 1) %>% 
-    readr::write_csv(paste0("01_table_pp_", i, ".csv"))
+    readr::write_csv(paste0("01_eval_table_pp_", i, ".csv"))
   pa_specie %>% 
     dplyr::mutate(pa = 0) %>%
-    readr::write_csv(paste0("01_table_pa_", i, ".csv"))
+    readr::write_csv(paste0("01_eval_table_pa_", i, ".csv"))
   
   # directory
-  setwd(path); setwd("03_enm")
+  setwd(path); setwd("03_enms")
   
 } # ends for "i"
 

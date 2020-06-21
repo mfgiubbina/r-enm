@@ -1,10 +1,10 @@
 #' ---
 #' title: maps
 #' authors: mauricio vancine
-#' date: 2020-05-18
+#' date: 2020-05-20
 #' ---
 
-# preparate r -------------------------------------------------------------
+# prepare r -------------------------------------------------------------
 # memory
 rm(list = ls())
 
@@ -22,7 +22,7 @@ dir()
 
 # import data -------------------------------------------------------------
 # occ
-occ <- readr::read_csv("02_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
+occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
 # limits
@@ -32,7 +32,7 @@ ggplot(li) + geom_sf() + theme_bw()
 
 # maps --------------------------------------------------------------------
 # directory
-dir.create("07_maps")
+dir.create("09_maps")
 
 # plot
 for(i in occ$species %>% unique){
@@ -43,7 +43,7 @@ for(i in occ$species %>% unique){
   
   # occurrences -------------------------------------------------------------
   # directory
-  setwd(path); setwd("07_maps"); dir.create(i); setwd(i)
+  setwd(path); setwd("09_maps"); dir.create(i); setwd(i)
   
   # map
   map_occ <- ggplot() +
@@ -75,15 +75,20 @@ for(i in occ$species %>% unique){
   
   # continuum ensemble -------------------------------------------------------
   # directory
-  setwd(path); setwd("05_ensembles_uncertainties"); setwd(i)
+  setwd(path); setwd("05_ensembles"); setwd(i)
   
   # import
   ens <- dir(pattern = i) %>%
-    stringr::str_subset("ensemble_") %>% 
+    stringr::str_subset(".tif$") %>% 
+    stringr::str_subset("ens_") %>% 
     raster::stack()
   
+  # scenarios
+  sce_names <- c("Present", "RCP 4.5 2050", "RCP 4.5 2070", "RCP 8.5 2050", "RCP 8.5 2070")
+  sce_names
+  
   # directory
-  setwd(path); setwd("07_maps"); setwd(i)
+  setwd(path); setwd("09_maps"); setwd(i)
   
   # map
   for(j in ens %>% raster::nlayers() %>% seq){
@@ -96,10 +101,8 @@ for(i in occ$species %>% unique){
     map_sui <- ggplot() +
       geom_raster(data = da, aes(x, y, fill = sui)) +
       geom_sf(data = li, fill = NA, color = "gray30") +
-      geom_label(aes(x = -50, y = 12), size = 7,
-                 label = names(ens[[j]]) %>% 
-                   stringr::str_replace_all(paste0("ensemble_weighted_average_", i, "_"), "") %>% 
-                   stringr::str_replace_all("_", " ")) +
+      geom_label(aes(x = -58, y = 13), size = 5,
+                 label = sce_names[j]) +
       scale_color_manual(values = "black", guide = guide_legend(order = 1)) +
       scale_fill_gradientn(colours = wesanderson::wes_palette("Zissou1", n = 100, type = "continuous"),
                            limits = c(0, 1)) +
@@ -117,7 +120,7 @@ for(i in occ$species %>% unique){
                                              linetype = "solid", 
                                              colour = "black"),
             axis.title = element_text(size = 12, face = "plain"),
-            legend.position = c(.75, .17))
+            legend.position = c(.75, .16))
     map_sui
     
     # export
@@ -127,19 +130,20 @@ for(i in occ$species %>% unique){
   
   # binary ensemble ---------------------------------------------------------
   # directory
-  setwd(path); setwd("06_ensembles_thrs"); setwd(i)
+  setwd(path); setwd("06_ensemble_thresholds"); setwd(i)
   
   # import
   ens_thr <- dir(pattern = i) %>%
-    stringr::str_subset("ensemble_") %>% 
+    stringr::str_subset(".tif$") %>% 
+    stringr::str_subset("ens_") %>% 
     raster::stack()
   
-  # cenaries
-  cen_names <- rep(c("Present", "RCP 4.5 - 2050", "RCP 4.5 - 2070", "RCP 8.5 - 2050", "RCP 8.5 - 2070"), each = 5)
-  cen_names
+  # scenarios
+  sce_names <- rep(c("Present", "RCP 4.5 2050", "RCP 4.5 2070", "RCP 8.5 2050", "RCP 8.5 2070"), each = 5)
+  sce_names
   
   # directory
-  setwd(path); setwd("07_maps"); setwd(i)
+  setwd(path); setwd("09_maps"); setwd(i)
   
   for(j in ens_thr %>% raster::nlayers() %>% seq){
     
@@ -155,8 +159,8 @@ for(i in occ$species %>% unique){
     map_thr <- ggplot() +
       geom_raster(data = da, aes(x, y, fill = sui)) +
       geom_sf(data = li, fill = NA) +
-      geom_label(aes(x = -50, y = 12), size = 7,
-                 label = cen_names[j]) +
+      geom_label(aes(x = -58, y = 13), size = 5,
+                 label = sce_names[j]) +
       scale_color_manual(values = "black", guide = guide_legend(order = 1)) +
       scale_fill_manual(values = c("#3B9AB2", "#F21A00")) +
       coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
@@ -184,24 +188,25 @@ for(i in occ$species %>% unique){
   
   # uncertainties -----------------------------------------------------------
   # directory
-  setwd(path); setwd("05_ensembles_uncertainties"); setwd(i)
+  setwd(path); setwd("07_uncertainties"); setwd(i)
   
   # import
   unc <- dir(pattern = i) %>% 
     stringr::str_subset(".tif$") %>% 
-    stringr::str_subset("uncertainties") %>% 
+    stringr::str_subset("unc") %>% 
     raster::stack()
   
-  # cenaries
-  cen_names <- rep(c("Present", "RCP 4.5 - 2050", "RCP 4.5 - 2070", "RCP 8.5 - 2050", "RCP 8.5 - 2070"), times = 5)
-  cen_names
+  # scenarios
+  sce_names <- rep(c("Present", "RCP 4.5 2050", "RCP 4.5 2070", "RCP 8.5 2050", "RCP 8.5 2070"), 
+                   times = 4)
+  sce_names
   
-  # unc names
+  # uncertainty names
   unc_names <- rep(c("GCMs", "Methods", "Methods * GCMs", "Residuals"), each = 5)
   unc_names
   
   # directory
-  setwd(path); setwd("07_maps"); setwd(i)
+  setwd(path); setwd("09_maps"); setwd(i)
   
   for(j in unc %>% raster::nlayers() %>% seq){
     
@@ -214,13 +219,13 @@ for(i in occ$species %>% unique){
     map_unc <- ggplot() +
       geom_raster(data = da, aes(x, y, fill = unc)) +
       geom_sf(data = li, fill = NA, color = "gray30") +
-      geom_label(aes(x = -50, y = 12), size = 7,
-                 label = cen_names[j]) +
+      geom_label(aes(x = -58, y = 13), size = 5,
+                 label = sce_names[j]) +
       scale_color_manual(values = "black", guide = guide_legend(order = 1)) +
       scale_fill_gradientn(colours = rev(RColorBrewer::brewer.pal(name = "Spectral", n = 9)), limits = c(0, 100)) +
       coord_sf(xlim = sf::st_bbox(li)[c(1, 3)], ylim = sf::st_bbox(li)[c(2, 4)]) +
       labs(x = "Longitude", y = "Latitude", 
-           fill = paste0("Uncertainties (%) \n", unc_names[j])) +
+           fill = paste0("Uncertainty (%)\n", unc_names[j])) +
       annotation_scale(location = "br", width_hint = .3) +
       annotation_north_arrow(location = "tr", which_north = "true", 
                              pad_x = unit(.3, "cm"), pad_y = unit(.3, "cm"),
@@ -233,7 +238,7 @@ for(i in occ$species %>% unique){
                                              linetype = "solid", 
                                              colour = "black"),
             axis.title = element_text(size = 12, face = "plain"),
-            legend.position = c(.75, .16))
+            legend.position = c(.79, .15))
     map_unc
     
     # export
@@ -241,6 +246,6 @@ for(i in occ$species %>% unique){
     
   }
   
-  }
+}
 
 # end ---------------------------------------------------------------------

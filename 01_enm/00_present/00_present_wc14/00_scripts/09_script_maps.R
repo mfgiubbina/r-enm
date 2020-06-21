@@ -115,7 +115,7 @@ for(i in occ$species %>% unique){
   map_sui
   
   # export
-  ggsave(paste0("02_map_", names(ens), ".png"), map_sui, wi = 20, he = 25, un = "cm", dpi = 300)
+  ggsave(paste0("02_map_enm_", names(ens), ".png"), map_sui, wi = 20, he = 25, un = "cm", dpi = 300)
   
   
   # binary ensemble ---------------------------------------------------------
@@ -165,7 +165,7 @@ for(i in occ$species %>% unique){
     map_thr
     
     # export
-    ggsave(paste0("03_map_", names(ens)[[j]], ".png"), map_thr, wi = 20, he = 25, un = "cm", dpi = 300)
+    ggsave(paste0("03_map_ens_", names(ens)[[j]], ".png"), map_thr, wi = 20, he = 25, un = "cm", dpi = 300)
     
   }
   
@@ -222,7 +222,7 @@ for(i in occ$species %>% unique){
     map_unc
     
     # export
-    ggsave(paste0("04_map_", names(unc)[[j]], ".png"), map_unc, wi = 20, he = 25, un = "cm", dpi = 300)
+    ggsave(paste0("04_map_unc_", names(unc)[[j]], ".png"), map_unc, wi = 20, he = 25, un = "cm", dpi = 300)
     
   }
   

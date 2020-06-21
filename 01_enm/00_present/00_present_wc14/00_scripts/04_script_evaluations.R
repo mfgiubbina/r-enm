@@ -47,7 +47,7 @@ for(i in eva$species %>% unique){
   eva_table
   
   # export
-  readr::write_csv(eva_table, paste0("02_table_eval_summary_", i, ".csv"))
+  readr::write_csv(eva_table, paste0("02_eval_table_summary_", i, ".csv"))
   
   # boxplots
   for(j in c("tss_spec_sens", "auc")){
@@ -62,7 +62,8 @@ for(i in eva$species %>% unique){
       aes_string(x = "method", y = j, color = "method") +
       geom_boxplot(size = .5, fill = "gray90", color = "black") +
       geom_jitter(width = 0.2, size = 4, alpha = .7) +
-      scale_color_manual(values = wesanderson::wes_palette(name = "Darjeeling1", n = eva$method %>% unique %>% length, 
+      scale_color_manual(values = wesanderson::wes_palette(name = "Darjeeling1", 
+                                                           n = eva$method %>% unique %>% length, 
                                                            type = "continuous")) +
       labs(x = "Methods", 
            y = stringr::str_to_upper(j) %>% stringr::str_replace("_", " "), 
@@ -75,7 +76,7 @@ for(i in eva$species %>% unique){
             axis.text.x = element_text(size = 12),
             axis.text.y = element_text(size = 15), 
             axis.title = element_text(size = 17))
-    ggsave(paste0("03_plot_eval_meth_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
+    ggsave(paste0("03_eval_plot_meth_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
     
   }
   

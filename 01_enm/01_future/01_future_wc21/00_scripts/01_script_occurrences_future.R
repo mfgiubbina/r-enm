@@ -1,7 +1,7 @@
 #' ---
 #' title: occ - download and clean
 #' author: mauricio vancine
-#' date: 2019-06-16
+#' date: 2019-06-20
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -135,7 +135,7 @@ setwd(path); setwd("01_raw")
 # unzip
 purrr::map(dir(patt = ".zip"), unzip)
 
-# impor data
+# import data
 for(i in dir(patt = ".xlsx$")){
   
   # information
@@ -201,6 +201,9 @@ gnr_total <- NULL
 
 for(i in sp_list){
   
+  # info
+  print(i)
+  
   # gnr names
   gnr <- taxize::gnr_resolve(i)
   
@@ -229,7 +232,7 @@ gnr_taxa
 gnr_total
 
 # export gnr total
-readr::write_csv(gnr_total, paste0("gnr_total_", lubridate::today(), ".csv"))
+readr::write_csv(gnr_total, paste0("table_gnr_total_", lubridate::today(), ".csv"))
 
 # confer data
 occ_data %>%
@@ -286,7 +289,7 @@ occ_data_taxa_date %>%
   theme(legend.text = element_text(face = "italic"),
         legend.position = "none",
         strip.text = element_text(size = 10, face = "italic"))
-ggsave(filename = "hist_date.png", wi = 20, he = 15, un = "cm", dpi = 300)
+ggsave(filename = "occ_plot_date.png", wi = 20, he = 15, un = "cm", dpi = 300)
 
 # map
 occ_data_taxa_date_vector <- occ_data_taxa_date %>% 
@@ -466,96 +469,6 @@ readr::write_csv(occ_data_taxa_date_bias_limit_spatial,
                  paste0("occ_clean_taxa_date_bias_limit_spatial.csv"))
 
 readr::write_csv(occ_filter, 
-                 paste0("occ_filter_summary.csv"))
-
-# -------------------------------------------------------------------------
-
-#' -------
-#' draft
-#' -------
-
-# oppc --------------------------------------------------------------------
-# # import raster id
-# var_id <- raster::raster("/home/mude/data/gitlab/r-sdm/00_pragmatico/00_present/01_variables/03_var/bio02.tif")
-# var_id
-# 
-# var_id[!is.na(var_id)] <- raster::cellFromXY(var_id, raster::rasterToPoints(var_id)[, 1:2])
-# plot(var_id)
-# 
-# # oppc
-# occ_data_tax_date_spa_oppc <- occ_data_tax_date_spa %>% 
-#   dplyr::mutate(oppc = raster::extract(var_id, dplyr::select(., longitude, latitude))) %>% 
-#   dplyr::distinct(species, oppc, .keep_all = TRUE) %>% 
-#   dplyr::filter(!is.na(oppc)) %>% 
-#   dplyr::add_count(species) %>% 
-#   dplyr::arrange(species)
-# occ_data_tax_date_spa_oppc
-# 
-# # verify
-# table(occ_data_tax_date_spa$species)
-# table(occ_data_tax_date_spa_oppc$species)
-# 
-# # map
-# ggplot() +
-#   geom_sf(data = li %>% sf::st_crop(c(xmin = min(occ_data$longitude), ymin = min(occ_data$latitude), 
-#                                       xmax = max(occ_data$longitude), ymax = max(occ_data$latitude))),
-#           fill = "gray", alpha = .5) +
-#   geom_point(data = occ_data_tax_date_spa_oppc, aes(x = longitude, y = latitude, color = species)) +
-#   theme_bw()
-# 
-# # sample bias -------------------------------------------------------------
-# # haddadus binotatus
-# # sampbias
-# sampbias_hb <- occ_data_tax_date_spa %>%
-#   dplyr::filter(species == "haddadus_binotatus") %>% 
-#   dplyr::select(species, longitude, latitude) %>% 
-#   dplyr::rename(decimallongitude = longitude,
-#                 decimallatitude = latitude) %>% 
-#   sampbias::SamplingBias(x = ., 
-#                          res = .1666667,
-#                          buffer = .1666667*10, 
-#                          biasdist = seq(0, 1e6, 2e4))
-# sampbias_hb
-# 
-# # maps
-# sampbias_hb %>% plot
-# 
-# # summary
-# sampbias_hb_table <- sampbias_hb$biastable %>% 
-#   dplyr::mutate(factors = rownames(sampbias_hb$biastable)) %>% 
-#   tidyr::pivot_longer(-factors, names_to = "bias_dist", values_to = "bias_effect") %>% 
-#   dplyr::mutate(bias_dist = as.numeric(bias_dist))
-# sampbias_hb_table
-# 
-# ggplot(data = sampbias_hb_table) +
-#   aes(x = factors, y = bias_effect) +
-#   geom_boxplot(fill = viridis::viridis(4)) +
-#   geom_jitter(width = .2, size = .1) +
-#   coord_flip() +
-#   theme_bw()
-# 
-# ggplot(data = ) +
-#   aes(x = bias_dist/1e3, y = bias_effect, color = factors) +
-#   geom_point() +
-#   scale_color_viridis_d() +
-#   scale_x_continuous(breaks = c(0, 250, 500, 750, 1000)) +
-#   theme_bw()
-# 
-# # brachycephalus ephippium
-# # sampbias
-# sampbias_be <- occ_data_tax_date_spa %>%
-#   dplyr::filter(species == "brachycephalus_ephippium") %>% 
-#   dplyr::select(species, longitude, latitude) %>% 
-#   dplyr::rename(decimallongitude = longitude,
-#                 decimallatitude = latitude) %>% 
-#   sampbias::SamplingBias(x = ., 
-#                          res = 1, 
-#                          biasdist = c(0, 5000, 10000))
-# sampbias_be$biastable %>% row.names()
-# 
-# # summary
-# summary(sampbias_be)
-# sampbias_be %>% plot
-# sampbias_be$biastable
+                 paste0("occ_table_filter_summary.csv"))
 
 # end ---------------------------------------------------------------------

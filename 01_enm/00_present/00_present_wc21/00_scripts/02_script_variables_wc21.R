@@ -132,7 +132,7 @@ cor_table_summary <- cor_table %>%
 cor_table_summary
 
 # export
-readr::write_csv(cor_table_summary, "table_correlacao.csv")
+readr::write_csv(cor_table_summary, "var_table_correlacao.csv")
 
 # select variables
 # correlated variables
@@ -165,7 +165,7 @@ var_ggpairs <- var_da_cor07 %>%
           axisLabels = "none") +
   theme_bw()
 var_ggpairs
-ggsave(filename = "plot_correlation.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
+ggsave(filename = "var_plot_correlation.png", plot = var_ggpairs, wi = 20, he = 15, un = "cm", dpi = 300)
 
 # create variables --------------------------------------------------------
 # directory

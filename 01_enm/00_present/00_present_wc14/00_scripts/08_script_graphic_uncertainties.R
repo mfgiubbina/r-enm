@@ -69,10 +69,12 @@ for(i in sp){
     geom_point(color = "black", size = .5, alpha = .5, pch = 20) +
     geom_density2d(bins = 10) +
     labs(x = "Suitability", y = "Method uncertainties (%)") +
+    xlim(0, 1) +
+    ylim(0, 100) +
     theme_bw() +
     theme(axis.title = element_text(size = 15),
           axis.text = element_text(size = 12))
-  ggsave(paste0("plot_method_uncertainties_and_suitability_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
+  ggsave(paste0("plot_unc_method_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
   
   ggplot(data = da_sui_unc) +
     aes(x = sui, y = unc_res) +
@@ -82,10 +84,12 @@ for(i in sp){
     geom_point(color = "black", size = .5, alpha = .5, pch = 20) +
     geom_density2d(bins = 10) +
     labs(x = "Suitability", y = "Residual uncertainties (%)") +
+    xlim(0, 1) +
+    ylim(0, 100) +
     theme_bw() +
     theme(axis.title = element_text(size = 15),
           axis.text = element_text(size = 12))
-  ggsave(paste0("plot_residual_uncertainties_and_suitability_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
+  ggsave(paste0("plot_unc_residual_", i, ".png"), wi = 25, he = 20, un = "cm", dpi = 300)
   
 }
 

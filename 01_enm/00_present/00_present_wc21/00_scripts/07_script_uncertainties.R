@@ -163,7 +163,7 @@ for(i in eva$species %>% unique){
                      mean = mean(values) %>% round(3),
                      sd = sd(values) %>% round(3))
   
-  readr::write_csv(table_resume, paste0("00_table_unc_", i, ".csv"))
+  readr::write_csv(table_resume, paste0("00_unc_table_", i, ".csv"))
   
   # export
   raster::writeRaster(x = unc, 

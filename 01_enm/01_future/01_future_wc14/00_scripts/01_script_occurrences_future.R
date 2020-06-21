@@ -469,6 +469,6 @@ readr::write_csv(occ_data_taxa_date_bias_limit_spatial,
                  paste0("occ_clean_taxa_date_bias_limit_spatial.csv"))
 
 readr::write_csv(occ_filter, 
-                 paste0("table_occ_filter_summary.csv"))
+                 paste0("occ_table_filter_summary.csv"))
 
 # end ---------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #' ---
-#' title: ensemble - weighted average and uncertainties - hierarchical anova
-#' authors: mauricio vancine
-#' date: 2020-06-18
+#' title: ensemble - uncertainties
+#' author: mauricio vancine
+#' date: 2020-06-19
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -12,6 +12,7 @@ rm(list = ls())
 library(raster)
 library(tidyverse)
 library(vegan)
+library(progress)
 
 # raster options
 raster::rasterOptions(maxmemory = 1e+200, chunksize = 1e+200)
@@ -24,26 +25,26 @@ dir()
 
 # import evaluates --------------------------------------------------------
 # directory
-setwd("04_evaluation")
+setwd("04_evaluations")
 
 # import evaluations
-eva <- dir(pattern = "00_evaluation_", recursive = TRUE) %>% 
-  purrr::map_dfr(., col_types = cols(), readr::read_csv)
+eva <- dir(pattern = "00_eval_table_", recursive = TRUE) %>% 
+  purrr::map_dfr(., readr::read_csv)
 eva
 
-# weighted average ensemble  ----------------------------------------------
+# uncertainties -----------------------------------------------------------
 # tss
 tss_limit <- .5
 
 # directories
-setwd(path); dir.create("05_ensembles")
+setwd(path); dir.create("07_uncertainties")
 
 # ensemble
 for(i in eva$species %>% unique){
   
-  # ensemble ---------------------------------------------------------------
+  # standardization ---------------------------------------------------------------
   # information
-  print(paste("Ensemble to", i))
+  print(paste("Uncertainties to", i))
   
   # selection
   eva_i <- eva %>% 
@@ -62,7 +63,7 @@ for(i in eva$species %>% unique){
     dplyr::pull()
   
   # directory
-  setwd(path); setwd(paste0("03_enm/", i))
+  setwd(path); setwd(paste0("03_enms/", i))
   
   # import
   enm_i_r <- dir(pattern = ".tif$") %>% 
@@ -70,7 +71,7 @@ for(i in eva$species %>% unique){
     raster::stack()
   names(enm_i_r) <- stringr::str_replace(names(enm_i_r), "_present", "__present")
   
-  # infos
+  # info
   gcm <- stringr::str_split_fixed(names(enm_i_r), "_", 8)[, 6] %>% 
     stringi::stri_remove_empty() %>% 
     unique
@@ -86,7 +87,7 @@ for(i in eva$species %>% unique){
   # tss
   tss_i_gcm <- rep(tss_i, length(gcm))
   
-  # standardization ---------------------------------------------------------
+  # standardization
   print("Standardization can take a looong time...")
   
   enm_i_st <- list()
@@ -142,35 +143,107 @@ for(i in eva$species %>% unique){
   enm_i_st$cenarios <- enm_i_r_gcm_met_cen_val$cenarios
   enm_i_st
   
-  # weighted average ensemble -----------------------------------------------
-  # directory
-  setwd(path); setwd("05_ensembles"); dir.create(i); setwd(i)
+  # uncertainties -----------------------------------------------------------
+  
+  # table
+  table_resume <- NULL
   
   # ensemble
   for(c in cen){
     
     # information
-    print(paste("Weighted average ensemble to", i, "and", c))
+    print(paste("Uncertainties of", i, "for the", c))
     
     # selection
     enm_i_st_cen <- enm_i_st %>%
       dplyr::filter(cenarios == c) %>% 
       dplyr::select(-cenarios)
     
-    # weighted average
-    ens <- enm_i_r[[1]]
-    ens[] <- apply(enm_i_st_cen, 1, function(x){sum(x * tss_i_gcm) / sum(tss_i_gcm)})
-    plot(ens)
+    # suitability
+    sui <- enm_i_st_cen
+    
+    # factors
+    met_fac <- stringr::str_split_fixed(names(enm_i_st_cen), "_", 9)[, 4] %>% as.factor()
+    gcm_fac <- stringr::str_split_fixed(names(enm_i_st_cen), "_", 9)[, 6] %>% as.factor()
+    
+    # anova
+    sui_ms <- NULL
+    
+    pb <- progress_bar$new(format = "anova: [:bar] (:percent)",
+                           total = nrow(sui))
+    
+    for(p in 1:nrow(sui)){
+      
+      pb$tick()
+      
+      sui_p <- as.numeric(sui[p, ])
+      
+      if(any(is.na(sui_p))){
+        
+        sui_ms <- rbind(sui_ms, rep(NA, 4))
+        
+      } else{
+        
+        lm_model <- lm(sui_p ~ met_fac * gcm_fac)
+        anova_model <- anova(lm_model)
+        sui_ms <- rbind(sui_ms, anova_model$"Mean Sq")
+        
+      }
+      
+    }
+    
+    # column names
+    colnames(sui_ms) <- c("methods", "gcms", "methodsgcms", "residuals")
+    
+    # proportion of variance explained by each component
+    sui_ms_sum <- apply(sui_ms, 1, sum)
+    sui_ms_prop <- (sui_ms/sui_ms_sum)*100
+    
+    # mapping uncertainties
+    unc_r <- enm_i_r[[1]]
+    unc <- raster::stack()
+    
+    for(r in 1:ncol(sui_ms_prop)){
+      
+      unc_r[] <- sui_ms_prop[, r]
+      unc <- raster::stack(unc, unc_r)
+      
+    }
+    
+    # names
+    names(unc) <- c("methods", "gcms", "methodsgcms", "residuals")
+    plot(unc)
+    
+    # directory
+    setwd(path); setwd("07_uncertainties"); dir.create(i); setwd(i)
     
     # export
-    raster::writeRaster(x = ens, 
-                        filename = paste0("ensemble_weighted_average_", i, "_", c), 
+    raster::writeRaster(x = unc, 
+                        filename = paste0("unc_", names(unc), "_", i, "_", c), 
+                        bylayer = TRUE,
                         format = "GTiff", 
                         options = c("COMPRESS=DEFLATE"), 
                         progress = "text",
                         overwrite = TRUE)
     
+    # table
+    table_resume_temp <- sui_ms_prop %>% 
+      tibble::as_tibble() %>% 
+      tidyr::drop_na() %>%
+      tidyr::pivot_longer(cols = c("methods", "gcms", "methodsgcms", "residuals"), 
+                          names_to = "source", values_to = "values") %>% 
+      dplyr::group_by(source) %>% 
+      dplyr::summarise(median = median(values) %>% round(3),
+                       min = min(values) %>% round(3),
+                       max = max(values) %>% round(3),
+                       mean = max(values) %>% round(3),
+                       max = max(values) %>% round(3)) %>% 
+      dplyr::mutate(scenario = c, .after = source)
+    table_resume <- dplyr::bind_rows(table_resume, table_resume_temp)
+    
   }
+  
+  readr::write_csv(table_resume, paste0("00_unc_table_", i, ".csv"))
   
   print("All right, finish!")
   

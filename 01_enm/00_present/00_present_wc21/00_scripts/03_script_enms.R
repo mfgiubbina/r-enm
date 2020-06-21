@@ -216,15 +216,15 @@ for(i in occ$species %>% unique){
   dir.create(i); setwd(i)
   
   # export evaluations
-  readr::write_csv(eval_species, paste0("00_table_eval_", i, ".csv"))
+  readr::write_csv(eval_species, paste0("00_eval_table_", i, ".csv"))
   
   # export presence and pseudo-absence points
   pr_specie %>% 
     dplyr::mutate(pa = 1) %>% 
-    readr::write_csv(paste0("01_table_pp_", i, ".csv"))
+    readr::write_csv(paste0("01_eval_table_pp_", i, ".csv"))
   pa_specie %>% 
     dplyr::mutate(pa = 0) %>%
-    readr::write_csv(paste0("01_table_pa_", i, ".csv"))
+    readr::write_csv(paste0("01_eval_table_pa_", i, ".csv"))
   
   # directory
   setwd(path); setwd("03_enms")

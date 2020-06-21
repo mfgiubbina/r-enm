@@ -1,7 +1,7 @@
 #' ---
 #' title: uncertainties graphics
 #' author: mauricio vancine
-#' date: 2020-06-19
+#' date: 2020-06-20
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -14,7 +14,7 @@ library(tidyverse)
 library(vegan)
 
 # directory
-path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc14"
+path <- "/home/mude/data/github/r-enm/01_enm/01_future/01_future_wc21"
 setwd(path)
 dir()
 
@@ -83,7 +83,8 @@ for(i in sp){
                                  unc_gcm = unc_j %>% dplyr::select(contains("unc_gcms_")) %>% dplyr::pull(), 
                                  unc_met_gcm = unc_j %>% dplyr::select(contains("unc_methodsgcms_")) %>% dplyr::pull(), 
                                  unc_met = unc_j %>% dplyr::select(contains("unc_methods_")) %>% dplyr::pull(), 
-                                 unc_res = unc_j %>% dplyr::select(contains("_residuals_")) %>% dplyr::pull())
+                                 unc_res = unc_j %>% dplyr::select(contains("_residuals_")) %>% dplyr::pull()) %>% 
+      tidyr::drop_na()
     
     # uncertainties and suitability
     ggplot(data = da_sui_unc) +

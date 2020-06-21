@@ -1,7 +1,7 @@
 #' ---
-#' title: evaluation
+#' title: evaluations
 #' authors: mauricio vancine
-#' date: 2020-06-16
+#' date: 2020-06-20
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -19,7 +19,7 @@ dir()
 
 # import evaluate data ----------------------------------------------------
 # import
-eva <- purrr::map_df(dir(pattern = "00_evaluation_", recursive = TRUE), readr::read_csv)
+eva <- purrr::map_df(dir(pattern = "00_eval_", recursive = TRUE), readr::read_csv)
 eva
 
 # evaluate analysis -------------------------------------------------------
@@ -29,7 +29,7 @@ for(i in eva$species %>% unique){
   print(paste("Evaluation to", i))
   
   # directory
-  setwd(path); setwd(paste0("04_evaluation/", i))
+  setwd(path); setwd(paste0("04_evaluations/", i))
   
   # table
   eva_table <- eva %>% 
@@ -43,7 +43,7 @@ for(i in eva$species %>% unique){
   eva_table
   
   # export
-  readr::write_csv(eva_table, paste0("01_table_eval_summary_", i, ".csv"))
+  readr::write_csv(eva_table, paste0("02_eval_table_summary_", i, ".csv"))
   
   # boxplots
   for(j in c("tss_spec_sens", "auc")){
@@ -71,7 +71,7 @@ for(i in eva$species %>% unique){
             axis.text.x = element_text(size = 12),
             axis.text.y = element_text(size = 15), 
             axis.title = element_text(size = 17))
-    ggsave(paste0("03_plot_eval_meth_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
+    ggsave(paste0("03_eval_plot_meth_", j, "_", i, ".png"), he = 15, wi = 20, un = "cm", dpi = 300)
     
   }
   

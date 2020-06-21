@@ -222,7 +222,7 @@ for(i in occ$species %>% unique){
     map_unc
     
     # export
-    ggsave(paste0("04_map_", names(unc)[[j]], ".png"), map_unc, wi = 20, he = 25, un = "cm", dpi = 300)
+    ggsave(paste0("04_map_unc_", names(unc)[[j]], ".png"), map_unc, wi = 20, he = 25, un = "cm", dpi = 300)
     
   }
   

@@ -289,7 +289,7 @@ occ_data_taxa_date %>%
   theme(legend.text = element_text(face = "italic"),
         legend.position = "none",
         strip.text = element_text(size = 10, face = "italic"))
-ggsave(filename = "plot_occ_date.png", wi = 20, he = 15, un = "cm", dpi = 300)
+ggsave(filename = "occ_plot_date.png", wi = 20, he = 15, un = "cm", dpi = 300)
 
 # map
 occ_data_taxa_date_vector <- occ_data_taxa_date %>% 
@@ -469,7 +469,7 @@ readr::write_csv(occ_data_taxa_date_bias_limit_spatial,
                  paste0("occ_clean_taxa_date_bias_limit_spatial.csv"))
 
 readr::write_csv(occ_filter, 
-                 paste0("table_occ_filter_summary.csv"))
+                 paste0("occ_table_filter_summary.csv"))
 
 # -------------------------------------------------------------------------
 

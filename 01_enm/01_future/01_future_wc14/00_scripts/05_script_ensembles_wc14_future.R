@@ -1,7 +1,7 @@
 #' ---
 #' title: ensemble - weighted average
 #' authors: mauricio vancine
-#' date: 2020-06-19
+#' date: 2020-06-21
 #' ---
 
 # prepare r -------------------------------------------------------------
@@ -27,7 +27,7 @@ dir()
 setwd("04_evaluations")
 
 # import evaluations
-eva <- dir(pattern = "00_table_eval_", recursive = TRUE) %>% 
+eva <- dir(pattern = "00_eval_table_", recursive = TRUE) %>% 
   purrr::map_dfr(., col_types = cols(), readr::read_csv)
 eva
 

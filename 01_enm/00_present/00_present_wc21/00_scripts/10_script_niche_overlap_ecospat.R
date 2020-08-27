@@ -182,7 +182,7 @@ par(def.par)  #- reset to default
 
 # export ------------------------------------------------------------------
 # directory
-setwd(path); dir.create("10_overlap_niche"); setwd("10_overlap_niche")
+setwd(path); dir.create("10_niche_overlap"); setwd("10_niche_overlap")
 
 # table
 tibble::tibble(

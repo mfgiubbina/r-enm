@@ -54,7 +54,8 @@ for(i in occ$species %>% unique){
     raster::extract(ens, .)
   
   # combine
-  pa_sui <- cbind(pa, sui = sui)
+  pa_sui <- cbind(pa, sui = sui) %>% 
+    na.omit()
   
   # maximum tss and kappa
   max_tss <- ecospat::ecospat.max.tss(Pred = pa_sui$sui, Sp.occ = pa_sui$pa)

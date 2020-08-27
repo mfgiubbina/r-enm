@@ -1,7 +1,7 @@
 #' ---
 #' title: evaluation
 #' authors: mauricio vancine
-#' date: 2020-06-16
+#' date: 2020-06-21
 #' ---
 
 # prepare r -------------------------------------------------------------

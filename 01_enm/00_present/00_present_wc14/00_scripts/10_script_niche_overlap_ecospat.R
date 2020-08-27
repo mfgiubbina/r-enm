@@ -28,14 +28,14 @@ dir()
 occ <- readr::read_csv("01_occurrences/03_clean/occ_clean_taxa_date_bias_limit_spatial.csv")
 occ
 
-# cb
+# sp1
 occ_sp1 <- occ %>% 
   dplyr::filter(species == "chrysocyon_brachyurus") %>% 
   dplyr::select(longitude, latitude) %>% 
   as.data.frame()
 occ_sp1
 
-# sl
+# sp2
 occ_sp2 <- occ %>% 
   dplyr::filter(species == "solanum_lycocarpum") %>% 
   dplyr::select(longitude, latitude) %>% 
@@ -58,11 +58,11 @@ points(occ_sp1$longitude, occ_sp1$latitude, pch = 20, col = "darkorange")
 points(occ_sp2$longitude, occ_sp2$latitude, pch = 20, col = "forestgreen")
 
 # extract values ----------------------------------------------------------
-# var cb
+# var sp1
 var_sp1 <- raster::extract(var, occ_sp1)
 var_sp1
 
-# var sl
+# var sp2
 var_sp2 <- raster::extract(var, occ_sp2)
 var_sp2
 
@@ -79,17 +79,17 @@ pca_env
 ecospat::ecospat.plot.contrib(contrib = pca_env$co, eigen = pca_env$eig)
 
 # predict the scores on the axes
-scores_sp1 <- ade4::suprow(pca_env, var_sp1)$lisup # scores for cb
+scores_sp1 <- ade4::suprow(pca_env, var_sp1)$lisup # scores for sp1
 scores_sp1
 
-scores_sp2 <- ade4::suprow(pca_env, var_sp2)$lisup # scores for sl
+scores_sp2 <- ade4::suprow(pca_env, var_sp2)$lisup # scores for sp2
 scores_sp2
 
 scores_bkg <- pca_env$li # scores for background climate
 scores_bkg
 
 # calculation of occurence density ----------------------------------------
-# niche z to cb
+# niche z to sp1
 z1 <- ecospat::ecospat.grid.clim.dyn(glob = scores_bkg, 
                                      glob1 = scores_bkg, 
                                      sp = scores_sp1, 
@@ -101,7 +101,7 @@ z1
 plot(z1$z.uncor)
 points(scores_sp1, pch = 20, col = "darkorange")
 
-# niche z to sl
+# niche z to sp2
 z2 <- ecospat::ecospat.grid.clim.dyn(glob = scores_bkg, 
                                      glob1 = scores_bkg, 
                                      sp = scores_sp2, 
@@ -131,7 +131,7 @@ ecospat::ecospat.plot.niche.dyn(z1, z2,
 # equivalency test --------------------------------------------------------
 # niche equivalency test
 eq <- ecospat::ecospat.niche.equivalency.test(z1, z2, 
-                                              rep = 3, 
+                                              rep = 100, 
                                               alternative = "greater", 
                                               ncores = parallel::detectCores() - 1)
 eq
@@ -145,7 +145,7 @@ ecospat::ecospat.plot.overlap.test(eq, type = "D", title = "Equivalency")
 # similarity test ----------------------------------------------------------
 # niche similarity test
 si_sp1_sp2 <- ecospat::ecospat.niche.similarity.test(z1, z2, 
-                                                     rep = 3, 
+                                                     rep = 100, 
                                                      alternative = "greater",
                                                      rand.type = 1, 
                                                      ncores = parallel::detectCores() - 1)
@@ -153,7 +153,7 @@ si_sp1_sp2
 
 si_sp2_sp1 <- ecospat::ecospat.niche.similarity.test(z2, 
                                                      z1, 
-                                                     rep = 3, 
+                                                     rep = 100, 
                                                      alternative = "greater",
                                                      rand.type = 1, 
                                                      ncores = parallel::detectCores() - 1)
@@ -176,14 +176,14 @@ ecospat::ecospat.plot.niche.dyn(z1, z2, quant = .25, interest = 1,
                                 colinter = adjustcolor("darkorchid", .3), colZ1 = "gray", colZ2 = "gray",
                                 title = "Niche Overlap", name.axis1 = "PC1", name.axis2 = "PC2")
 ecospat::ecospat.plot.overlap.test(eq, type = "D", title = "Equivalency")
-ecospat::ecospat.plot.overlap.test(si_sp1_sp2, type = "D", title = "Similarity (p2 -> sp1)")
+ecospat::ecospat.plot.overlap.test(si_sp1_sp2, type = "D", title = "Similarity (sp2 -> sp1)")
 ecospat::ecospat.plot.overlap.test(si_sp2_sp1, type = "D", title = "Similarity (sp1 -> sp2)")
 def.par <- par(no.readonly = TRUE)
 par(def.par)  #- reset to default
 
 # export ------------------------------------------------------------------
 # directory
-setwd(path); dir.create("10_overlap_niche"); setwd("10_overlap_niche")
+setwd(path); dir.create("10_niche_overlap"); setwd("10_niche_overlap")
 
 # table
 tibble::tibble(

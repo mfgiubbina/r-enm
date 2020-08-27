@@ -143,8 +143,7 @@ for(i in sp){
       ylim(0, 100) +
       theme_bw() +
       theme(axis.title = element_text(size = 15),
-            axis.text = element_text(size = 12),
-            legend.position = "none")
+            axis.text = element_text(size = 12))
     ggsave(paste0("plot_uncertainties_",  i, "_", j, "_residuals.png"), wi = 25, he = 20, un = "cm", dpi = 300)    
     
   }

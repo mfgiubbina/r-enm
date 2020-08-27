@@ -202,7 +202,7 @@ for(i in occ$species %>% unique){
   sce_names
   
   # uncertainty names
-  unc_names <- rep(c("GCMs", "Methods", "Methods * GCMs", "Residuals"), each = 5)
+  unc_names <- rep(c("GCMs", "Methods", "Methods * GCMs", "Residuals"), times = 5)
   unc_names
   
   # directory
